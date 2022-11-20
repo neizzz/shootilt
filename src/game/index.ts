@@ -17,8 +17,9 @@ import { ISystem } from './models/system';
 
 export default class Game {
   static readonly MAX_ENTITY_COUNT = 1024;
-  static readonly WIDTH = window.innerWidth;
-  static readonly HEIGHT = window.innerHeight;
+  static readonly VIEW_WIDTH = window.innerWidth;
+  static readonly VIEW_HEIGHT = window.innerHeight;
+  private _gameApp: Application;
   private _entityManager: EntityManager;
   private _systems: ISystem[] = [];
 
@@ -48,12 +49,24 @@ export default class Game {
       })
     ),
   };
-  avoiderEntityMap = new Map<number, boolean>();
-  trackerEntityMap = new Map<number, boolean>();
+  // avoiderEntityMap = new Map<number, boolean>();
+  // trackerEntityMap = new Map<number, boolean>();
 
   constructor() {
+    this._gameApp = new Application({
+      width: Game.VIEW_WIDTH,
+      height: Game.VIEW_HEIGHT,
+      backgroundColor: 0xc8b6e2,
+      resolution: window.devicePixelRatio,
+      autoDensity: true,
+    });
     /** TODO: set system ordering rule */
     this._entityManager = new EntityManager(this);
+  }
+
+  start() {
+    document.body.appendChild(this._gameApp.view);
+
     this._systems.push(
       // new MoveSysmtem(),/
       new RenderSystem(
@@ -61,23 +74,14 @@ export default class Game {
         this.componentsPool[ComponentKind.Sprite]
       )
     );
-  }
-
-  start() {
-    /** init PIXI.js */
-    const app = new Application({
-      width: Game.WIDTH,
-      height: Game.HEIGHT,
-      backgroundColor: 0xc8b6e2,
-      // resolution: window.devicePixelRatio ?? 1,
-    });
-    document.body.appendChild(app.view);
 
     /** create the player's avoider */
     this._entityManager.createEntity(EntityKind.Avoider);
 
     /** Game Loop */
-    app.ticker.add((/** tickDelta TODO: frame sync */) => {});
+    this._gameApp.ticker.add((/** tickDelta TODO: frame sync */) => {
+      this._systems.forEach((system) => system.update());
+    });
 
     window.addEventListener(
       'deviceorientation',
@@ -86,10 +90,23 @@ export default class Game {
   }
 
   end() {
+    this._systems = [];
     window.removeEventListener(
       'deviceorientation',
       this._deviceOrientationListener
     );
+  }
+
+  addChild(sprite: Sprite) {
+    console.log(this._gameApp.stage.addChild(sprite));
+  }
+
+  removeChild(sprite: Sprite) {
+    this._gameApp.stage.removeChild(sprite);
+  }
+
+  getRenderer() {
+    return this._gameApp.renderer;
   }
 
   /** TODO:
