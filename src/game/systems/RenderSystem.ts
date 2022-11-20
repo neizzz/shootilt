@@ -15,12 +15,22 @@ export default class RenderSystem implements ISystem {
   }
 
   update() {
-    for (let i = 0; i < Game.MAX_ENTITY_COUNT; i++) {
-      const {x, y} = this._positionComponents[i];
-      const {sprite} = this._spriteComponents[i];
+    for (let entity = 0; entity < Game.MAX_ENTITY_COUNT; entity++) {
+      if (!this._checkInUse(entity)) continue;
 
-      sprite.position.x = x;
-      sprite.position.y = y;
+      const { x, y } = this._positionComponents[entity];
+      const { sprite } = this._spriteComponents[entity];
+
+      sprite.x = x;
+      sprite.y = y;
     }
   }
+
+  private _checkInUse(entity: number) {
+    return (
+      this._positionComponents[entity].inUse &&
+      this._spriteComponents[entity].inUse
+    );
+  }
 }
+
