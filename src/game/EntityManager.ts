@@ -1,6 +1,6 @@
 import { EntityKind } from './models/entity';
 import { ComponentKind } from './models/component';
-import { CircularQueue } from './utils';
+import { CircularQueue } from './utils/container';
 import Game from '.';
 
 /** NOTE: FIXME: tightly-coupled to PIXI.js */
@@ -21,7 +21,7 @@ export default class EntityManager {
     );
   }
 
-  createEntity(kind: EntityKind, ...args: unknown[]) {
+  createEntity(kind: EntityKind, ...args: unknown[]): number {
     const newEntity = this._nextIdleEntity();
     const componentsPool = this._game.componentsPool;
 
@@ -32,14 +32,24 @@ export default class EntityManager {
       case EntityKind.Avoider: {
         componentsPool[ComponentKind.Sprite][newEntity].inUse = true;
         componentsPool[ComponentKind.Sprite][newEntity].sprite = sprite;
+
         componentsPool[ComponentKind.Position][newEntity].inUse = true;
         componentsPool[ComponentKind.Position][newEntity].x =
           Game.VIEW_WIDTH / 2;
         componentsPool[ComponentKind.Position][newEntity].y =
           Game.VIEW_HEIGHT / 2;
+
+        componentsPool[ComponentKind.Velocity][newEntity].inUse = true;
+        componentsPool[ComponentKind.Velocity][newEntity].x = 0;
+        componentsPool[ComponentKind.Velocity][newEntity].y = 0;
         break;
       }
+
+      default:
+        throw new Error('unknown entity kind');
     }
+
+    return newEntity;
   }
 
   removeEntity(entity: number) {
@@ -55,6 +65,7 @@ export default class EntityManager {
     Object.values(componentsPool).forEach((componentPool) => {
       componentPool[entity].inUse = false;
     });
+
     this._returnEntity(entity);
   }
 
@@ -70,7 +81,7 @@ export default class EntityManager {
   private _createSpriteCloser() {
     const avoiderGraphics = new Graphics();
     avoiderGraphics.beginFill(0x495c83);
-    avoiderGraphics.drawCircle(0, 0, 10);
+    avoiderGraphics.drawCircle(0, 0, 6);
     avoiderGraphics.endFill();
     avoiderGraphics.cacheAsBitmap = true;
 

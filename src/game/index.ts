@@ -6,10 +6,12 @@ import {
 } from './models/component';
 import EntityManager from './EntityManager';
 import { EntityKind } from './models/entity';
-import { SealedArray } from './utils';
+import { SealedArray } from './utils/container';
 import { Application, Sprite } from 'pixi.js';
 import RenderSystem from './systems/RenderSystem';
 import { ISystem } from './models/system';
+import MoveSystem from './systems/MoveSystem';
+import VelocityInputSystem from './systems/VelocityInputSystem';
 
 // const MAX_AVOIDER_COUNT = 1;
 // const MAX_TRACKER_COUNT = MAX_ENTITY_COUNT - MAX_AVOIDER_COUNT;
@@ -22,6 +24,7 @@ export default class Game {
   private _gameApp: Application;
   private _entityManager: EntityManager;
   private _systems: ISystem[] = [];
+  private _systemsForPlayer: ISystem[] = [];
 
   componentsPool = {
     [ComponentKind.Velocity]: SealedArray.from<VelocityComponent>(
@@ -49,7 +52,8 @@ export default class Game {
       })
     ),
   };
-  // avoiderEntityMap = new Map<number, boolean>();
+
+  private _playerEntity: number = NaN;
   // trackerEntityMap = new Map<number, boolean>();
 
   constructor() {
@@ -60,45 +64,46 @@ export default class Game {
       resolution: window.devicePixelRatio,
       autoDensity: true,
     });
-    /** TODO: set system ordering rule */
     this._entityManager = new EntityManager(this);
   }
 
   start() {
     document.body.appendChild(this._gameApp.view);
 
+    /** create the player's avoider */
+    this._playerEntity = this._entityManager.createEntity(EntityKind.Avoider);
+
+    /** TODO: set system ordering rule */
     this._systems.push(
-      // new MoveSysmtem(),/
+      new MoveSystem(
+        this.componentsPool[ComponentKind.Position],
+        this.componentsPool[ComponentKind.Velocity]
+      ),
       new RenderSystem(
         this.componentsPool[ComponentKind.Position],
         this.componentsPool[ComponentKind.Sprite]
       )
     );
 
-    /** create the player's avoider */
-    this._entityManager.createEntity(EntityKind.Avoider);
+    this._systemsForPlayer.push(
+      new VelocityInputSystem(
+        this.componentsPool[ComponentKind.Velocity][this._playerEntity]
+      )
+    );
 
     /** Game Loop */
     this._gameApp.ticker.add((/** tickDelta TODO: frame sync */) => {
       this._systems.forEach((system) => system.update());
     });
-
-    window.addEventListener(
-      'deviceorientation',
-      this._deviceOrientationListener
-    );
   }
 
   end() {
+    this._systems.forEach((system) => system.destroy?.());
     this._systems = [];
-    window.removeEventListener(
-      'deviceorientation',
-      this._deviceOrientationListener
-    );
   }
 
   addChild(sprite: Sprite) {
-    console.log(this._gameApp.stage.addChild(sprite));
+    this._gameApp.stage.addChild(sprite);
   }
 
   removeChild(sprite: Sprite) {
@@ -108,10 +113,5 @@ export default class Game {
   getRenderer() {
     return this._gameApp.renderer;
   }
-
-  /** TODO:
-   * 이벤트 주기 파악.
-   */
-  private _deviceOrientationListener(e: DeviceOrientationEvent) {}
 }
 
