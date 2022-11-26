@@ -13,13 +13,14 @@ export interface IComponent {
 export type PositionComponent = IComponent & {
   x: number;
   y: number;
-}
+};
 
 export type VelocityComponent = IComponent & {
   x: number;
   y: number;
-}
+};
 
 export type SpriteComponent = IComponent & {
-  sprite: Sprite; /** FIXME: pixi js로부터 격리 필요 */
+  sprite: Sprite /** FIXME: pixi js로부터 격리 필요 */;
 };
+

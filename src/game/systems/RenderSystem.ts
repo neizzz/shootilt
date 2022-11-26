@@ -28,8 +28,8 @@ export default class RenderSystem implements ISystem {
 
   private _checkInUse(entity: number) {
     return (
-      this._positionComponents[entity].inUse &&
-      this._spriteComponents[entity].inUse
+      this._spriteComponents[entity].inUse &&
+      this._positionComponents[entity].inUse
     );
   }
 }
