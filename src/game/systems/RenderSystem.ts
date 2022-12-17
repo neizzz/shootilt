@@ -1,5 +1,6 @@
 import Game from '..';
 import { PositionComponent, SpriteComponent } from '../models/component';
+import { Entity } from '../models/entity';
 import { ISystem } from '../models/system';
 
 export default class RenderSystem implements ISystem {
@@ -15,7 +16,7 @@ export default class RenderSystem implements ISystem {
   }
 
   update() {
-    for (let entity = 0; entity < Game.MAX_ENTITY_COUNT; entity++) {
+    for (let entity = 0 as Entity; entity < Game.MAX_ENTITY_COUNT; entity++) {
       if (!this._checkInUse(entity)) continue;
 
       const { x, y } = this._positionComponents[entity];
@@ -26,7 +27,7 @@ export default class RenderSystem implements ISystem {
     }
   }
 
-  private _checkInUse(entity: number) {
+  private _checkInUse(entity: Entity) {
     return (
       this._spriteComponents[entity].inUse &&
       this._positionComponents[entity].inUse
