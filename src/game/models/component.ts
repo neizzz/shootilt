@@ -4,7 +4,15 @@ export enum ComponentKind {
   Position = 'component/position',
   Velocity = 'component/velocity',
   Sprite = 'component/sprite',
+  Speed = 'component/speed',
 }
+
+export type MappedComponentFromKind = {
+  [ComponentKind.Position]: PositionComponent;
+  [ComponentKind.Velocity]: VelocityComponent;
+  [ComponentKind.Sprite]: SpriteComponent;
+  [ComponentKind.Speed]: SpeedComponent;
+};
 
 export interface IComponent {
   inUse: boolean;
@@ -18,6 +26,10 @@ export type PositionComponent = IComponent & {
 export type VelocityComponent = IComponent & {
   x: number;
   y: number;
+};
+
+export type SpeedComponent = IComponent & {
+  speed: number;
 };
 
 export type SpriteComponent = IComponent & {

@@ -1,21 +1,22 @@
 import {
   ComponentKind,
   PositionComponent,
+  SpeedComponent,
   SpriteComponent,
   VelocityComponent,
 } from './models/component';
 import EntityManager from './EntityManager';
-import { EntityKind } from './models/entity';
+import { Entity, EntityKind } from './models/entity';
 import { SealedArray } from './utils/container';
 import { Application, Sprite } from 'pixi.js';
 import RenderSystem from './systems/RenderSystem';
 import { ISystem } from './models/system';
 import MoveSystem from './systems/MoveSystem';
 import VelocityInputSystem from './systems/VelocityInputSystem';
-
-// const MAX_AVOIDER_COUNT = 1;
-// const MAX_TRACKER_COUNT = MAX_ENTITY_COUNT - MAX_AVOIDER_COUNT;
-// TODO: bullet count
+import { TimeValue } from './models/common';
+import WaveSystem from './systems/WaveSystem';
+import { now } from './utils/time';
+import TrackSystem from './systems/TrackSystem';
 
 export default class Game {
   static readonly MAX_ENTITY_COUNT = 1024;
@@ -25,6 +26,9 @@ export default class Game {
   private _entityManager: EntityManager;
   private _systems: ISystem[] = [];
   private _systemsForPlayer: ISystem[] = [];
+  private _timeInfo: {
+    start: TimeValue;
+  } = { start: NaN as TimeValue };
 
   componentsPool = {
     [ComponentKind.Velocity]: SealedArray.from<VelocityComponent>(
@@ -33,6 +37,13 @@ export default class Game {
         inUse: false,
         x: NaN,
         y: NaN,
+      })
+    ),
+    [ComponentKind.Speed]: SealedArray.from<SpeedComponent>(
+      { length: Game.MAX_ENTITY_COUNT },
+      () => ({
+        inUse: false,
+        speed: NaN,
       })
     ),
     [ComponentKind.Position]: SealedArray.from<PositionComponent>(
@@ -53,8 +64,7 @@ export default class Game {
     ),
   };
 
-  private _playerEntity: number = NaN;
-  // trackerEntityMap = new Map<number, boolean>();
+  private _playerEntity = NaN as Entity;
 
   constructor() {
     this._gameApp = new Application({
@@ -70,11 +80,26 @@ export default class Game {
   start() {
     document.body.appendChild(this._gameApp.view);
 
+    this._timeInfo = Object.freeze({ start: now() });
+
     /** create the player's avoider */
     this._playerEntity = this._entityManager.createEntity(EntityKind.Avoider);
 
     /** TODO: set system ordering rule */
     this._systems.push(
+      new WaveSystem(
+        (positionX: number, positionY: number) =>
+          this._entityManager.createEntity(EntityKind.Tracker, {
+            [ComponentKind.Position]: { x: positionX, y: positionY },
+          }),
+        () => this._entityManager.getEntityCount(EntityKind.Tracker),
+        this.getStartTime.bind(this)
+      ),
+      new TrackSystem(
+        this._playerEntity,
+        this.componentsPool[ComponentKind.Position],
+        this.componentsPool[ComponentKind.Speed]
+      ),
       new MoveSystem(
         this.componentsPool[ComponentKind.Position],
         this.componentsPool[ComponentKind.Velocity]
@@ -112,6 +137,10 @@ export default class Game {
 
   getRenderer() {
     return this._gameApp.renderer;
+  }
+
+  getStartTime(): TimeValue {
+    return this._timeInfo.start;
   }
 }
 
