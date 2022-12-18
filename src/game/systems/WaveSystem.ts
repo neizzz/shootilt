@@ -1,8 +1,8 @@
-import Game from '..';
-import { ISystem } from '../models/system';
-import { TimeValue } from '../models/common';
-import { now } from '../utils/time';
-import { randomPosition } from '../utils/random';
+import Game from '@game';
+import { TimeValue } from '@game/models/common';
+import { ISystem } from '@game/models/system';
+import { randomPosition } from '@game/utils/random';
+import { now } from '@game/utils/time';
 
 // TODO: FIXME: 이건 추후에, DifficultySystem으로 수정가능하게
 const WAVE_INTERVAL = 5000 as TimeValue;

@@ -1,6 +1,6 @@
-import Game from '..';
-import { PositionComponent, SpeedComponent } from '../models/component';
-import { Entity } from '../models/entity';
+import Game from '@game';
+import { PositionComponent, SpeedComponent } from '@game/models/component';
+import { Entity } from '@game/models/entity';
 
 export default class TrackSystem {
   private _targetEntity: Entity;

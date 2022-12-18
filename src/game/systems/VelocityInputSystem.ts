@@ -1,5 +1,5 @@
-import { ISystem } from '../models/system';
-import { IComponent, VelocityComponent } from '../models/component';
+import { IComponent, VelocityComponent } from '@game/models/component';
+import { ISystem } from '@game/models/system';
 
 export default class VelocityInputSystem implements ISystem {
   private _boundDeviceOrientationListener =

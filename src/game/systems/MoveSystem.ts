@@ -1,7 +1,7 @@
-import Game from '..';
-import { PositionComponent, VelocityComponent } from '../models/component';
-import { Entity } from '../models/entity';
-import { ISystem } from '../models/system';
+import Game from '@game';
+import { PositionComponent, VelocityComponent } from '@game/models/component';
+import { Entity } from '@game/models/entity';
+import { ISystem } from '@game/models/system';
 
 export default class MoveSystem implements ISystem {
   private _positionComponents: PositionComponent[];
