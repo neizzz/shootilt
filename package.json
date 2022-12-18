@@ -17,7 +17,8 @@
     "@vitejs/plugin-basic-ssl": "^0.1.2",
     "@vitejs/plugin-react": "^2.2.0",
     "typescript": "~4.3.5",
-    "vite": "^3.2.3"
+    "vite": "^3.2.3",
+    "vite-tsconfig-paths": "^4.0.3"
   },
   "prettier": {
     "tabWidth": 2,
@@ -38,4 +39,3 @@
     "importOrderSortSpecifiers": true
   }
 }
-

@@ -1,14 +1,17 @@
+import { EntityKind } from './entity';
+
 export enum ComponentKind {
   Position = 'component/position',
   Velocity = 'component/velocity',
   Speed = 'component/speed',
-  Sprite = 'component/sprite',
+  Appearance = 'component/appearance',
 }
 
 export type MappedComponentFromKind = {
   [ComponentKind.Position]: PositionComponent;
   [ComponentKind.Velocity]: VelocityComponent;
   [ComponentKind.Speed]: SpeedComponent;
+  [ComponentKind.Appearance]: AppearanceComponent;
 };
 
 export interface IComponent {
@@ -29,13 +32,8 @@ export type SpeedComponent = IComponent & {
   speed: number;
 };
 
-/**
- * STATE
- * normal
- *
- *
- * TODO:
- * frozen
- * burned
- *
- */
+export type AppearanceComponent = IComponent & {
+  kind: EntityKind;
+  // TODO: state?
+};
+
