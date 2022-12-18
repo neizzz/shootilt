@@ -29,9 +29,14 @@ export default class TrackSystem {
       const vectorX = targetPosition.x - position.x;
       const vectorY = targetPosition.y - position.y;
       const totalScala = Math.abs(vectorX) + Math.abs(vectorY);
+      const isZeroTotalScala = totalScala < 0.1;
 
-      this._positionComponents[entity].x += (speed * vectorX) / totalScala;
-      this._positionComponents[entity].y += (speed * vectorY) / totalScala;
+      this._positionComponents[entity].x += isZeroTotalScala
+        ? 0
+        : (speed * vectorX) / totalScala;
+      this._positionComponents[entity].y += isZeroTotalScala
+        ? 0
+        : (speed * vectorY) / totalScala;
     }
   }
 

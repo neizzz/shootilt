@@ -1,22 +1,23 @@
+import { Application } from 'pixi.js';
+
+import EntityManager from '@game/EntityManager';
+import { TimeValue } from '@game/models/common';
 import {
+  AppearanceComponent,
   ComponentKind,
   PositionComponent,
   SpeedComponent,
-  SpriteComponent,
   VelocityComponent,
-} from './models/component';
-import EntityManager from './EntityManager';
-import { Entity, EntityKind } from './models/entity';
-import { SealedArray } from './utils/container';
-import { Application, Sprite } from 'pixi.js';
-import RenderSystem from './systems/RenderSystem';
-import { ISystem } from './models/system';
-import MoveSystem from './systems/MoveSystem';
-import VelocityInputSystem from './systems/VelocityInputSystem';
-import { TimeValue } from './models/common';
-import WaveSystem from './systems/WaveSystem';
-import { now } from './utils/time';
-import TrackSystem from './systems/TrackSystem';
+} from '@game/models/component';
+import { Entity, EntityKind } from '@game/models/entity';
+import { ISystem } from '@game/models/system';
+import MoveSystem from '@game/systems/MoveSystem';
+import RenderSystem from '@game/systems/RenderSystem';
+import TrackSystem from '@game/systems/TrackSystem';
+import VelocityInputSystem from '@game/systems/VelocityInputSystem';
+import WaveSystem from '@game/systems/WaveSystem';
+import { SealedArray } from '@game/utils/container';
+import { now } from '@game/utils/time';
 
 export default class Game {
   static readonly MAX_ENTITY_COUNT = 1024;
@@ -25,7 +26,6 @@ export default class Game {
   private _gameApp: Application;
   private _entityManager: EntityManager;
   private _systems: ISystem[] = [];
-  private _systemsForPlayer: ISystem[] = [];
   private _timeInfo: {
     start: TimeValue;
   } = { start: NaN as TimeValue };
@@ -54,12 +54,11 @@ export default class Game {
         y: NaN,
       })
     ),
-    [ComponentKind.Sprite]: SealedArray.from<SpriteComponent>(
+    [ComponentKind.Appearance]: SealedArray.from<AppearanceComponent>(
       { length: Game.MAX_ENTITY_COUNT },
       () => ({
         inUse: false,
-        sprite: new Sprite(),
-        /** state TODO: kind + state 조합으로 sprite 다양화? */
+        kind: EntityKind.NULL,
       })
     ),
   };
@@ -85,7 +84,7 @@ export default class Game {
     /** create the player's avoider */
     this._playerEntity = this._entityManager.createEntity(EntityKind.Avoider);
 
-    /** TODO: set system ordering rule */
+    /** Game Loop 틱마다 update되는 system들 */
     this._systems.push(
       new WaveSystem(
         (positionX: number, positionY: number) =>
@@ -105,15 +104,15 @@ export default class Game {
         this.componentsPool[ComponentKind.Velocity]
       ),
       new RenderSystem(
+        this._gameApp.stage,
+        this._gameApp.renderer,
         this.componentsPool[ComponentKind.Position],
-        this.componentsPool[ComponentKind.Sprite]
+        this.componentsPool[ComponentKind.Appearance]
       )
     );
 
-    this._systemsForPlayer.push(
-      new VelocityInputSystem(
-        this.componentsPool[ComponentKind.Velocity][this._playerEntity]
-      )
+    new VelocityInputSystem(
+      this.componentsPool[ComponentKind.Velocity][this._playerEntity]
     );
 
     /** Game Loop */
@@ -125,18 +124,6 @@ export default class Game {
   end() {
     this._systems.forEach((system) => system.destroy?.());
     this._systems = [];
-  }
-
-  addChild(sprite: Sprite) {
-    this._gameApp.stage.addChild(sprite);
-  }
-
-  removeChild(sprite: Sprite) {
-    this._gameApp.stage.removeChild(sprite);
-  }
-
-  getRenderer() {
-    return this._gameApp.renderer;
   }
 
   getStartTime(): TimeValue {
