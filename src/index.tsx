@@ -1,4 +1,4 @@
-import Game from './game';
+import Game from '@game';
 
 document.body.style.margin = '0';
 document.body.style.padding = '0';

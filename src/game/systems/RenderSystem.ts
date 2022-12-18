@@ -1,7 +1,7 @@
-import Game from '..';
-import { PositionComponent, SpriteComponent } from '../models/component';
-import { Entity } from '../models/entity';
-import { ISystem } from '../models/system';
+import Game from '@game';
+import { PositionComponent, SpriteComponent } from '@game/models/component';
+import { Entity } from '@game/models/entity';
+import { ISystem } from '@game/models/system';
 
 export default class RenderSystem implements ISystem {
   private _positionComponents: PositionComponent[];
