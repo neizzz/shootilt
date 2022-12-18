@@ -4,4 +4,3 @@ export enum EntityKind {
   Avoider = 'entity/avoider',
   Tracker = 'entity/tracker',
 }
-

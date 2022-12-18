@@ -49,4 +49,3 @@ export default class WaveSystem implements ISystem {
     this._nextWaveTime = (this._nextWaveTime + WAVE_INTERVAL) as TimeValue;
   }
 }
-

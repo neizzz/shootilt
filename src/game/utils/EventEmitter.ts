@@ -14,4 +14,3 @@ export class EventEmitter<T extends EventMap> {
   off<K extends EventKey<T>>(eventName: K, fn: EventHandler<T[K]>) {}
   emit<K extends EventKey<T>>(eventName: K, params: T[K]) {}
 }
-

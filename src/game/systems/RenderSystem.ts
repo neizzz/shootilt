@@ -1,7 +1,13 @@
+import { Sprite } from 'pixi.js';
+
 import Game from '@game';
-import { PositionComponent, SpriteComponent } from '@game/models/component';
+import { IComponent, PositionComponent } from '@game/models/component';
 import { Entity } from '@game/models/entity';
 import { ISystem } from '@game/models/system';
+
+export type SpriteComponent = IComponent & {
+  sprite: Sprite /** FIXME: pixi js로부터 격리 필요 */;
+};
 
 export default class RenderSystem implements ISystem {
   private _positionComponents: PositionComponent[];
@@ -34,4 +40,3 @@ export default class RenderSystem implements ISystem {
     );
   }
 }
-

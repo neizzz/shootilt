@@ -1,10 +1,10 @@
-import { Entity, EntityKind } from './models/entity';
-import { ComponentKind, MappedComponentFromKind } from './models/component';
-import { CircularQueue, SealedArray } from './utils/container';
-import Game from '.';
-
 /** NOTE: FIXME: tightly-coupled to PIXI.js */
 import { Graphics, Sprite } from 'pixi.js';
+
+import Game from '.';
+import { ComponentKind, MappedComponentFromKind } from './models/component';
+import { Entity, EntityKind } from './models/entity';
+import { CircularQueue, SealedArray } from './utils/container';
 
 export default class EntityManager {
   private _game: Game;
@@ -156,4 +156,3 @@ export default class EntityManager {
     };
   }
 }
-

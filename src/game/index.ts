@@ -1,3 +1,7 @@
+import { Application, Sprite } from 'pixi.js';
+
+import EntityManager from './EntityManager';
+import { TimeValue } from './models/common';
 import {
   ComponentKind,
   PositionComponent,
@@ -5,18 +9,15 @@ import {
   SpriteComponent,
   VelocityComponent,
 } from './models/component';
-import EntityManager from './EntityManager';
 import { Entity, EntityKind } from './models/entity';
-import { SealedArray } from './utils/container';
-import { Application, Sprite } from 'pixi.js';
-import RenderSystem from './systems/RenderSystem';
 import { ISystem } from './models/system';
 import MoveSystem from './systems/MoveSystem';
-import VelocityInputSystem from './systems/VelocityInputSystem';
-import { TimeValue } from './models/common';
-import WaveSystem from './systems/WaveSystem';
-import { now } from './utils/time';
+import RenderSystem from './systems/RenderSystem';
 import TrackSystem from './systems/TrackSystem';
+import VelocityInputSystem from './systems/VelocityInputSystem';
+import WaveSystem from './systems/WaveSystem';
+import { SealedArray } from './utils/container';
+import { now } from './utils/time';
 
 export default class Game {
   static readonly MAX_ENTITY_COUNT = 1024;
@@ -143,4 +144,3 @@ export default class Game {
     return this._timeInfo.start;
   }
 }
-

@@ -29,9 +29,9 @@
     "endOfLine": "crlf",
     "bracketSpacing": true,
     "importOrder": [
-      "^@core/(.*)$",
-      "^@server/(.*)$",
-      "^@ui/(.*)$",
+      "@game",
+      "^@game/systems/(.*)$",
+      "^@game/models/(.*)$",
       "^[./]"
     ],
     "importOrderSeparation": true,

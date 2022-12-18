@@ -6,4 +6,3 @@ export class SealedArray {
       : Object.seal(Array.from({ length }));
   }
 }
-
