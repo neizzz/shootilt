@@ -1,7 +1,13 @@
 import Game from '@game';
+
 import { ComponentKind, MappedComponentFromKind } from '@game/models/component';
 import { Entity, EntityKind } from '@game/models/entity';
+
+import { increasingKeys } from '@game/utils/array';
 import { CircularQueue, SealedArray } from '@game/utils/container';
+
+import { AvoiderControlledState } from './states/avoider';
+import { TrackerSpawningState } from './states/tracker';
 
 export default class EntityManager {
   private _game: Game;
@@ -19,7 +25,7 @@ export default class EntityManager {
 
   constructor(game: Game) {
     this._game = game;
-    [...Array(Game.MAX_ENTITY_COUNT).keys()].forEach((num) =>
+    increasingKeys(Game.MAX_ENTITY_COUNT).forEach((num) =>
       this._idleEntityQueue.push(num as Entity)
     );
   }
@@ -37,37 +43,47 @@ export default class EntityManager {
     }
   ): Entity {
     const newEntity = this._nextIdleEntity();
-    const componentsPool = this._game.componentsPool;
+    const componentPools = this._game.getComponentPools();
 
     switch (kind) {
       case EntityKind.Avoider: {
-        componentsPool[ComponentKind.Appearance][newEntity].inUse = true;
-        componentsPool[ComponentKind.Appearance][newEntity].kind = kind;
-
-        componentsPool[ComponentKind.Position][newEntity].inUse = true;
-        componentsPool[ComponentKind.Position][newEntity].x =
+        componentPools[ComponentKind.Position][newEntity].inUse = true;
+        componentPools[ComponentKind.Position][newEntity].x =
           Game.VIEW_WIDTH / 2;
-        componentsPool[ComponentKind.Position][newEntity].y =
+        componentPools[ComponentKind.Position][newEntity].y =
           Game.VIEW_HEIGHT / 2;
 
-        componentsPool[ComponentKind.Velocity][newEntity].inUse = true;
-        componentsPool[ComponentKind.Velocity][newEntity].x = 0;
-        componentsPool[ComponentKind.Velocity][newEntity].y = 0;
+        componentPools[ComponentKind.Velocity][newEntity].inUse = true;
+        componentPools[ComponentKind.Velocity][newEntity].x = 0;
+        componentPools[ComponentKind.Velocity][newEntity].y = 0;
+
+        const stateComponent = componentPools[ComponentKind.State][newEntity];
+        stateComponent.inUse = true;
+        stateComponent.state = new AvoiderControlledState(
+          this._game.getGameStage(),
+          this._game.getTextureMap(EntityKind.Avoider),
+          stateComponent
+        ).enter();
         break;
       }
 
       case EntityKind.Tracker: {
-        componentsPool[ComponentKind.Appearance][newEntity].inUse = true;
-        componentsPool[ComponentKind.Appearance][newEntity].kind = kind;
-
-        componentsPool[ComponentKind.Position][newEntity].inUse = true;
-        componentsPool[ComponentKind.Position][newEntity].x =
+        componentPools[ComponentKind.Position][newEntity].inUse = true;
+        componentPools[ComponentKind.Position][newEntity].x =
           initComponents?.[ComponentKind.Position]?.x ?? NaN;
-        componentsPool[ComponentKind.Position][newEntity].y =
+        componentPools[ComponentKind.Position][newEntity].y =
           initComponents?.[ComponentKind.Position]?.y ?? NaN;
 
-        componentsPool[ComponentKind.Speed][newEntity].inUse = true;
-        componentsPool[ComponentKind.Speed][newEntity].speed = 1;
+        componentPools[ComponentKind.Speed][newEntity].inUse = true;
+        componentPools[ComponentKind.Speed][newEntity].speed = 1;
+
+        const stateComponent = componentPools[ComponentKind.State][newEntity];
+        stateComponent.inUse = true;
+        stateComponent.state = new TrackerSpawningState(
+          this._game.getGameStage(),
+          this._game.getTextureMap(EntityKind.Tracker),
+          stateComponent
+        ).enter();
         break;
       }
 
@@ -81,9 +97,9 @@ export default class EntityManager {
   }
 
   removeEntity(entity: Entity): void {
-    const componentsPool = this._game.componentsPool;
+    const componentPools = this._game.getComponentPools();
 
-    Object.values(componentsPool).forEach((componentPool) => {
+    Object.values(componentPools).forEach((componentPool) => {
       componentPool[entity].inUse = false;
     });
 

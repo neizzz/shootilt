@@ -1,18 +1,28 @@
 import Game from '@game';
-import { PositionComponent, SpeedComponent } from '@game/models/component';
+
+import {
+  PositionComponent,
+  SpeedComponent,
+  StateComponent,
+} from '@game/models/component';
 import { Entity } from '@game/models/entity';
+
+import { TrackerTrackingState } from '@game/states/tracker';
 
 export default class TrackSystem {
   private _targetEntity: Entity;
+  private _stateComponents: StateComponent[];
   private _positionComponents: PositionComponent[];
   private _speedComponents: SpeedComponent[];
 
   constructor(
     targetEntity: Entity,
+    stateComponents: StateComponent[],
     positionComponents: PositionComponent[],
     speedComponents: SpeedComponent[]
   ) {
     this._targetEntity = targetEntity;
+    this._stateComponents = stateComponents;
     this._positionComponents = positionComponents;
     this._speedComponents = speedComponents;
   }
@@ -40,9 +50,10 @@ export default class TrackSystem {
     }
   }
 
-  /** TODO: tracker만을 가려낼 수 있는 best practice? */
   private _checkInUse(entity: Entity) {
     return (
+      this._stateComponents[entity].inUse &&
+      this._stateComponents[entity].state instanceof TrackerTrackingState &&
       this._positionComponents[entity].inUse &&
       this._speedComponents[entity].inUse
     );

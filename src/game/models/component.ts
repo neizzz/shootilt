@@ -1,17 +1,19 @@
-import { EntityKind } from './entity';
+import { Sprite } from 'pixi.js';
+
+import { IState } from './state';
 
 export enum ComponentKind {
   Position = 'component/position',
   Velocity = 'component/velocity',
   Speed = 'component/speed',
-  Appearance = 'component/appearance',
+  State = 'component/state',
 }
 
 export type MappedComponentFromKind = {
   [ComponentKind.Position]: PositionComponent;
   [ComponentKind.Velocity]: VelocityComponent;
   [ComponentKind.Speed]: SpeedComponent;
-  [ComponentKind.Appearance]: AppearanceComponent;
+  [ComponentKind.State]: StateComponent;
 };
 
 export interface IComponent {
@@ -32,8 +34,8 @@ export type SpeedComponent = IComponent & {
   speed: number;
 };
 
-export type AppearanceComponent = IComponent & {
-  kind: EntityKind;
-  // TODO: state?
+export type StateComponent = IComponent & {
+  state?: IState;
+  sprites: Sprite[];
 };
 
