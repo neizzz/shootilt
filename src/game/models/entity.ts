@@ -6,3 +6,5 @@ export enum EntityKind {
   Tracker = 'entity/tracker',
 }
 
+export type NonNullEntityKind = Exclude<EntityKind, EntityKind.NULL>;
+

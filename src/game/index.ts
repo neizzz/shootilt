@@ -1,36 +1,53 @@
-import { Application } from 'pixi.js';
-
 import EntityManager from '@game/EntityManager';
+import {
+  Application,
+  Container,
+  ENV,
+  Graphics,
+  Texture,
+  settings,
+} from 'pixi.js';
+
 import { TimeValue } from '@game/models/common';
 import {
-  AppearanceComponent,
   ComponentKind,
   PositionComponent,
   SpeedComponent,
+  StateComponent,
   VelocityComponent,
 } from '@game/models/component';
-import { Entity, EntityKind } from '@game/models/entity';
+import { Entity, EntityKind, NonNullEntityKind } from '@game/models/entity';
 import { ISystem } from '@game/models/system';
+
 import MoveSystem from '@game/systems/MoveSystem';
 import RenderSystem from '@game/systems/RenderSystem';
 import TrackSystem from '@game/systems/TrackSystem';
 import VelocityInputSystem from '@game/systems/VelocityInputSystem';
 import WaveSystem from '@game/systems/WaveSystem';
+
+import { increasingKeys } from '@game/utils/array';
 import { SealedArray } from '@game/utils/container';
 import { now } from '@game/utils/time';
+
+settings.PREFER_ENV = ENV.WEBGL2;
 
 export default class Game {
   static readonly MAX_ENTITY_COUNT = 1024;
   static readonly VIEW_WIDTH = window.innerWidth;
   static readonly VIEW_HEIGHT = window.innerHeight;
   private _gameApp: Application;
+  private _stage: Container;
+  private _textureMaps!: Record<
+    NonNullEntityKind,
+    Record<string, Texture | Texture[]>
+  >;
   private _entityManager: EntityManager;
   private _systems: ISystem[] = [];
   private _timeInfo: {
     start: TimeValue;
   } = { start: NaN as TimeValue };
 
-  componentsPool = {
+  private _componentPools = {
     [ComponentKind.Velocity]: SealedArray.from<VelocityComponent>(
       { length: Game.MAX_ENTITY_COUNT },
       () => ({
@@ -54,11 +71,12 @@ export default class Game {
         y: NaN,
       })
     ),
-    [ComponentKind.Appearance]: SealedArray.from<AppearanceComponent>(
+    [ComponentKind.State]: SealedArray.from<StateComponent>(
       { length: Game.MAX_ENTITY_COUNT },
       () => ({
         inUse: false,
-        kind: EntityKind.NULL,
+        state: undefined,
+        sprites: [],
       })
     ),
   };
@@ -73,7 +91,35 @@ export default class Game {
       resolution: window.devicePixelRatio,
       autoDensity: true,
     });
+    this._stage = new Container();
+    this._stage.sortableChildren = true;
+    this._gameApp.stage.addChild(this._stage);
     this._entityManager = new EntityManager(this);
+
+    this.initTextureMaps();
+  }
+
+  initTextureMaps() {
+    this._textureMaps = {
+      [EntityKind.Avoider]: {
+        Body: this.generateTexture(
+          new Graphics().beginFill(0x495c83).drawCircle(0, 0, 6).endFill()
+        ),
+      },
+      [EntityKind.Tracker]: {
+        SpawningBody: increasingKeys(40).map((num) => {
+          const currentGraphics = new Graphics();
+          currentGraphics.beginFill(0xeb455f);
+          currentGraphics.drawCircle(0, 0, 0.2 * num);
+          currentGraphics.endFill();
+          currentGraphics.cacheAsBitmap = true;
+          return this.generateTexture(currentGraphics);
+        }),
+        Shadow: this.generateTexture(
+          new Graphics().beginFill(0xfcffe7).drawCircle(0, 0, 11).endFill()
+        ),
+      },
+    };
   }
 
   start() {
@@ -96,23 +142,22 @@ export default class Game {
       ),
       new TrackSystem(
         this._playerEntity,
-        this.componentsPool[ComponentKind.Position],
-        this.componentsPool[ComponentKind.Speed]
+        this._componentPools[ComponentKind.State],
+        this._componentPools[ComponentKind.Position],
+        this._componentPools[ComponentKind.Speed]
       ),
       new MoveSystem(
-        this.componentsPool[ComponentKind.Position],
-        this.componentsPool[ComponentKind.Velocity]
+        this._componentPools[ComponentKind.Position],
+        this._componentPools[ComponentKind.Velocity]
       ),
       new RenderSystem(
-        this._gameApp.stage,
-        this._gameApp.renderer,
-        this.componentsPool[ComponentKind.Position],
-        this.componentsPool[ComponentKind.Appearance]
+        this._componentPools[ComponentKind.Position],
+        this._componentPools[ComponentKind.State]
       )
     );
 
     new VelocityInputSystem(
-      this.componentsPool[ComponentKind.Velocity][this._playerEntity]
+      this._componentPools[ComponentKind.Velocity][this._playerEntity]
     );
 
     /** Game Loop */
@@ -128,6 +173,22 @@ export default class Game {
 
   getStartTime(): TimeValue {
     return this._timeInfo.start;
+  }
+
+  getComponentPools() {
+    return this._componentPools;
+  }
+
+  getGameStage() {
+    return this._stage;
+  }
+
+  getTextureMap(kind: NonNullEntityKind): Record<string, Texture | Texture[]> {
+    return this._textureMaps[kind];
+  }
+
+  generateTexture(graphics: Graphics): Texture {
+    return this._gameApp.renderer.generateTexture(graphics);
   }
 }
 
