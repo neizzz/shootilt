@@ -27,6 +27,7 @@
     "endOfLine": "crlf",
     "bracketSpacing": true,
     "importOrder": [
+      "^@assets/(.*)$",
       "^@game$",
       "^@game/models/(.*)$",
       "^@game/states/(.*)$",
