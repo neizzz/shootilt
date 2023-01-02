@@ -7,7 +7,6 @@
     "build": "tsc && vite build"
   },
   "dependencies": {
-    "@types/react": "^18.0.25",
     "pixi.js": "^6.5.8"
   },
   "devDependencies": {
