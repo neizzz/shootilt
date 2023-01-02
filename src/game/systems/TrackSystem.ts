@@ -1,4 +1,4 @@
-import Game from '@game';
+import { GameContext } from '@game';
 
 import {
   PositionComponent,
@@ -30,7 +30,11 @@ export default class TrackSystem {
   update() {
     const targetPosition = this._positionComponents[this._targetEntity];
 
-    for (let entity = 0 as Entity; entity < Game.MAX_ENTITY_COUNT; entity++) {
+    for (
+      let entity = 0 as Entity;
+      entity < GameContext.MAX_ENTITY_COUNT;
+      entity++
+    ) {
       if (!this._checkInUse(entity)) continue;
 
       const speed = this._speedComponents[entity].speed;

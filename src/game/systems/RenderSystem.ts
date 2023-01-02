@@ -1,4 +1,4 @@
-import Game from '@game';
+import { GameContext } from '@game';
 
 import { PositionComponent, StateComponent } from '@game/models/component';
 import { Entity } from '@game/models/entity';
@@ -17,7 +17,11 @@ export default class RenderSystem implements ISystem {
   }
 
   update() {
-    for (let entity = 0 as Entity; entity < Game.MAX_ENTITY_COUNT; entity++) {
+    for (
+      let entity = 0 as Entity;
+      entity < GameContext.MAX_ENTITY_COUNT;
+      entity++
+    ) {
       if (!this._checkInUse(entity)) {
         continue;
       }
