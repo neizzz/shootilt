@@ -1,47 +1,38 @@
-import Game from '@game';
+import Game, { GameContext } from '@game';
 
-import { ComponentKind, MappedComponentFromKind } from '@game/models/component';
+import { ComponentKind, PartialComponents } from '@game/models/component';
 import { Entity, EntityKind } from '@game/models/entity';
 
-import { increasingKeys } from '@game/utils/array';
-import { CircularQueue, SealedArray } from '@game/utils/container';
+import { AvoiderControlledState } from '@game/states/avoider';
+import { BulletShootingState } from '@game/states/bullet';
+import { TrackerTrackingState } from '@game/states/tracker';
+import { TrackerSpawningState } from '@game/states/tracker';
 
-import { AvoiderControlledState } from './states/avoider';
-import { TrackerSpawningState } from './states/tracker';
+import { increasingKeys } from '@game/utils/array';
+import { CircularQueue } from '@game/utils/container';
 
 export default class EntityManager {
   private _game: Game;
   private _idleEntityQueue = new CircularQueue<Entity>(
-    Game.MAX_ENTITY_COUNT + 1
+    GameContext.MAX_ENTITY_COUNT + 1
   );
-  private _countInfos = Object.seal({
-    [EntityKind.NULL]: NaN,
-    [EntityKind.Avoider]: 0,
-    [EntityKind.Tracker]: 0,
-  });
-  private _kindInfos = SealedArray.from<EntityKind>({
-    length: Game.MAX_ENTITY_COUNT,
-  });
+
+  /** FIXME: */
+  private _trackerCount = 0;
 
   constructor(game: Game) {
     this._game = game;
-    increasingKeys(Game.MAX_ENTITY_COUNT).forEach((num) =>
+    increasingKeys(GameContext.MAX_ENTITY_COUNT).forEach((num) =>
       this._idleEntityQueue.push(num as Entity)
     );
   }
 
-  getEntityCount(kind: EntityKind): number {
-    return this._countInfos[kind];
+  /** FIXME: */
+  getTrackerCount(): number {
+    return this._trackerCount;
   }
 
-  createEntity(
-    kind: EntityKind,
-    initComponents?: {
-      [key in keyof MappedComponentFromKind]?: Partial<
-        MappedComponentFromKind[key]
-      >;
-    }
-  ): Entity {
+  createEntity(kind: EntityKind, initComponents?: PartialComponents): Entity {
     const newEntity = this._nextIdleEntity();
     const componentPools = this._game.getComponentPools();
 
@@ -49,9 +40,9 @@ export default class EntityManager {
       case EntityKind.Avoider: {
         componentPools[ComponentKind.Position][newEntity].inUse = true;
         componentPools[ComponentKind.Position][newEntity].x =
-          Game.VIEW_WIDTH / 2;
+          GameContext.VIEW_WIDTH / 2;
         componentPools[ComponentKind.Position][newEntity].y =
-          Game.VIEW_HEIGHT / 2;
+          GameContext.VIEW_HEIGHT / 2;
 
         componentPools[ComponentKind.Velocity][newEntity].inUse = true;
         componentPools[ComponentKind.Velocity][newEntity].x = 0;
@@ -70,9 +61,9 @@ export default class EntityManager {
       case EntityKind.Tracker: {
         componentPools[ComponentKind.Position][newEntity].inUse = true;
         componentPools[ComponentKind.Position][newEntity].x =
-          initComponents?.[ComponentKind.Position]?.x ?? NaN;
+          initComponents![ComponentKind.Position]!.x!;
         componentPools[ComponentKind.Position][newEntity].y =
-          initComponents?.[ComponentKind.Position]?.y ?? NaN;
+          initComponents![ComponentKind.Position]!.y!;
 
         componentPools[ComponentKind.Speed][newEntity].inUse = true;
         componentPools[ComponentKind.Speed][newEntity].speed = 1;
@@ -87,12 +78,41 @@ export default class EntityManager {
         break;
       }
 
+      case EntityKind.FireBullet:
+      case EntityKind.IceBullet:
+      case EntityKind.BasicBullet: {
+        componentPools[ComponentKind.Position][newEntity].inUse = true;
+        componentPools[ComponentKind.Position][newEntity].x =
+          initComponents![ComponentKind.Position]!.x!;
+        componentPools[ComponentKind.Position][newEntity].y =
+          initComponents![ComponentKind.Position]!.y!;
+
+        componentPools[ComponentKind.Velocity][newEntity].inUse = true;
+        componentPools[ComponentKind.Velocity][newEntity].x =
+          initComponents![ComponentKind.Velocity]!.x!;
+        componentPools[ComponentKind.Velocity][newEntity].y =
+          initComponents![ComponentKind.Velocity]!.y!;
+
+        // TODO: collide
+
+        const stateComponent = componentPools[ComponentKind.State][newEntity];
+        stateComponent.inUse = true;
+        stateComponent.state = new BulletShootingState(
+          this._game.getGameStage(),
+          this._game.getTextureMap(kind),
+          stateComponent
+        ).enter();
+        break;
+      }
+
       default:
         throw new Error('unknown entity kind');
     }
 
-    this._countInfos[kind]++;
-    this._kindInfos[newEntity] = kind;
+    /** FIXME: */
+    if ((kind = EntityKind.Tracker)) {
+      this._trackerCount++;
+    }
     return newEntity as Entity;
   }
 
@@ -103,8 +123,15 @@ export default class EntityManager {
       componentPool[entity].inUse = false;
     });
 
-    this._countInfos[this._kindInfos[entity] as EntityKind]--;
-    this._kindInfos[entity] = EntityKind.NULL;
+    const stateComponent = componentPools[ComponentKind.State][entity];
+
+    /** FIXME: */
+    if (stateComponent.state instanceof TrackerTrackingState) {
+      this._trackerCount--;
+    }
+
+    stateComponent.state?.destroy();
+    stateComponent.state = undefined;
     this._returnEntity(entity);
   }
 

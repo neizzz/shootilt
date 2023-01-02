@@ -1,30 +1,49 @@
 import {
+  Application,
   Container,
   Graphics,
   ISystem,
-  InteractionData,
   InteractionEvent,
   LINE_CAP,
   LINE_JOIN,
 } from 'pixi.js';
 
-import { PositionComponent } from '@game/models/component';
+import { GameContext } from '@game';
+
+import {
+  ComponentKind,
+  PartialComponents,
+  PositionComponent,
+} from '@game/models/component';
+import { Bullet, EntityKind } from '@game/models/entity';
 
 type Point = { x: number; y: number };
+type BulletCreator = (
+  bulletKind: Bullet,
+  initComponents?: PartialComponents
+) => void;
 
 export default class ShootingSystem implements ISystem {
+  readonly MAX_SIGHT_LINE_LENGTH = GameContext.VIEW_HEIGHT / 2;
+  readonly MAX_BULLET_SPEED = 2.6;
   private _stage: Container;
-  private _playerPosition: PositionComponent;
+  private _playerPosition: PositionComponent; // TODO: player's context
   private _sightLineGraphics?: Graphics;
-  // private _createTargetLine: ;
+  private _createBullet: BulletCreator;
 
   private _dragStartPoint?: Point;
 
-  constructor(stage: Container, playerPosition: PositionComponent) {
+  constructor(
+    stage: Container,
+    playerPosition: PositionComponent,
+    bulletCreator: BulletCreator
+  ) {
     this._stage = stage;
     this._playerPosition = playerPosition;
+    this._createBullet = bulletCreator;
     this._stage.on('pointerdown', this._dragStart, this);
     this._stage.on('pointerup', this._dragEnd, this);
+    this._stage.on('pointerupoutside', this._dragEnd, this);
   }
 
   destroy() {
@@ -56,33 +75,37 @@ export default class ShootingSystem implements ISystem {
     const diffY = targetPoint.y - basePoint.y;
 
     const theta = this._calcTheta(diffX, diffY);
-    const d = Math.sqrt(Math.pow(diffX, 2) + Math.pow(diffY, 2));
-    const width = 24;
-    const halfWidth = width / 2;
+    const d = Math.min(
+      Math.sqrt(diffX * diffX + diffY * diffY),
+      this.MAX_SIGHT_LINE_LENGTH
+    );
+    const WIDTH = 24;
+    const HALF_WIDTH = WIDTH / 2;
+    const COLOR = 0xffffff;
 
     this._sightLineGraphics.clear();
-    this._sightLineGraphics.beginFill(0xcccccc, 0.6);
+    this._sightLineGraphics.beginFill(COLOR, 0.6);
     this._sightLineGraphics
       .lineStyle({
         width: 1,
-        color: 0xffffff,
+        color: COLOR,
         // alignment: 0.5,
         alpha: 0.6,
         join: LINE_JOIN.MITER,
         // cap: LINE_CAP.,
       })
       .moveTo(0, 14)
-      .lineTo(halfWidth, 0)
-      .lineTo(width, 14)
-      .lineTo(halfWidth + 4, 10)
-      .lineTo(halfWidth, d)
-      .lineTo(halfWidth - 4, 10)
+      .lineTo(HALF_WIDTH, 0)
+      .lineTo(WIDTH, 14)
+      .lineTo(HALF_WIDTH + 4, 10)
+      .lineTo(HALF_WIDTH, d)
+      .lineTo(HALF_WIDTH - 4, 10)
       .closePath();
     this._sightLineGraphics.endFill();
 
     // rotate
     this._sightLineGraphics.pivot = {
-      x: halfWidth,
+      x: HALF_WIDTH,
       y: d,
     };
     this._sightLineGraphics.rotation = theta;
@@ -110,8 +133,17 @@ export default class ShootingSystem implements ISystem {
   private _dragEnd(e: InteractionEvent) {
     if (!this._dragStartPoint) return;
 
-    const { x, y } = e.data.global;
-    // TODO: shoot
+    const d = this._sightLineGraphics!.pivot.y;
+    const theta = this._sightLineGraphics!.rotation;
+    const speed =
+      1 + ((this.MAX_BULLET_SPEED - 1) * d) / this.MAX_SIGHT_LINE_LENGTH;
+    this._createBullet(EntityKind.BasicBullet, {
+      [ComponentKind.Position]: this._playerPosition,
+      [ComponentKind.Velocity]: {
+        x: speed * Math.sin(theta),
+        y: -1 * speed * Math.cos(theta),
+      },
+    });
 
     this._dragStartPoint = undefined;
     this._stage.removeChild(this._sightLineGraphics!);

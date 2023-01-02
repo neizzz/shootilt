@@ -1,5 +1,5 @@
 export interface IState {
-  enter(): ThisType<IState>;
+  enter(...args: any): ThisType<IState>;
   destroy(): void;
   handleEvent(event: Event | CustomEvent): void;
 }

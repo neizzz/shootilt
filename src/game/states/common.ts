@@ -18,7 +18,7 @@ export class AbstractState implements IState {
     this._stateComponent = stateComponent;
   }
 
-  enter(): ThisType<AbstractState> {
+  enter(...args: any): ThisType<AbstractState> {
     new Error('abstract method');
     return this;
   }
@@ -32,6 +32,12 @@ export class AbstractState implements IState {
       sprite.destroy();
     });
     this._stateComponent.sprites = [];
+  }
+}
+
+export class InvalidEventTypeError extends Error {
+  constructor() {
+    super('invalid event type');
   }
 }
 

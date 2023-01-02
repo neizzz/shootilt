@@ -1,4 +1,9 @@
 export const TrackerEvent = {
-  SpawnEnd: 'tracker-event/spawn-end',
+  Spawn: 'tracker-event/spawn',
+  // TODO: dead
 } as const;
+
+export const BulletEvent = {
+  Out: 'bullet-event/out',
+};
 

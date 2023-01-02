@@ -11,12 +11,13 @@ import {
 import { TimeValue } from '@game/models/common';
 import {
   ComponentKind,
+  PartialComponents,
   PositionComponent,
   SpeedComponent,
   StateComponent,
   VelocityComponent,
 } from '@game/models/component';
-import { Entity, EntityKind, NonNullEntityKind } from '@game/models/entity';
+import { Bullet, Entity, EntityKind } from '@game/models/entity';
 import { ISystem } from '@game/models/system';
 
 import MoveSystem from '@game/systems/MoveSystem';
@@ -29,17 +30,17 @@ import { increasingKeys } from '@game/utils/array';
 import { SealedArray } from '@game/utils/container';
 import { now } from '@game/utils/time';
 
+import ShootingSystem from './systems/ShootingSystem';
+
 settings.PREFER_ENV = ENV.WEBGL2;
 
+export const GameContext = window.GameContext;
+
 export default class Game {
-  static readonly MAX_ENTITY_COUNT = 1024;
-  static readonly VIEW_WIDTH = window.innerWidth;
-  static readonly VIEW_HEIGHT = window.innerHeight;
   private _gameApp: Application;
   private _stage: Container;
-  private _textureMaps!: Record<
-    NonNullEntityKind,
-    Record<string, Texture | Texture[]>
+  private _textureMaps!: Partial<
+    Record<EntityKind, Record<string, Texture | Texture[]>>
   >;
   private _entityManager: EntityManager;
   private _systems: ISystem[] = [];
@@ -49,7 +50,7 @@ export default class Game {
 
   private _componentPools = {
     [ComponentKind.Velocity]: SealedArray.from<VelocityComponent>(
-      { length: Game.MAX_ENTITY_COUNT },
+      { length: GameContext.MAX_ENTITY_COUNT },
       () => ({
         inUse: false,
         x: NaN,
@@ -57,14 +58,14 @@ export default class Game {
       })
     ),
     [ComponentKind.Speed]: SealedArray.from<SpeedComponent>(
-      { length: Game.MAX_ENTITY_COUNT },
+      { length: GameContext.MAX_ENTITY_COUNT },
       () => ({
         inUse: false,
         speed: NaN,
       })
     ),
     [ComponentKind.Position]: SealedArray.from<PositionComponent>(
-      { length: Game.MAX_ENTITY_COUNT },
+      { length: GameContext.MAX_ENTITY_COUNT },
       () => ({
         inUse: false,
         x: NaN,
@@ -72,7 +73,7 @@ export default class Game {
       })
     ),
     [ComponentKind.State]: SealedArray.from<StateComponent>(
-      { length: Game.MAX_ENTITY_COUNT },
+      { length: GameContext.MAX_ENTITY_COUNT },
       () => ({
         inUse: false,
         state: undefined,
@@ -85,14 +86,16 @@ export default class Game {
 
   constructor() {
     this._gameApp = new Application({
-      width: Game.VIEW_WIDTH,
-      height: Game.VIEW_HEIGHT,
+      width: GameContext.VIEW_WIDTH,
+      height: GameContext.VIEW_HEIGHT,
       backgroundColor: 0xc8b6e2,
       resolution: window.devicePixelRatio,
       autoDensity: true,
     });
     this._stage = new Container();
     this._stage.sortableChildren = true;
+    this._stage.interactive = true;
+    this._stage.hitArea = this._gameApp.screen;
     this._gameApp.stage.addChild(this._stage);
     this._entityManager = new EntityManager(this);
 
@@ -119,6 +122,15 @@ export default class Game {
           new Graphics().beginFill(0xfcffe7).drawCircle(0, 0, 11).endFill()
         ),
       },
+      [EntityKind.BasicBullet]: {
+        Body: Texture.from('assets/basic-bullet.png'),
+      },
+      [EntityKind.FireBullet]: {
+        Body: Texture.from('assets/fire-bullet.png'),
+      },
+      [EntityKind.IceBullet]: {
+        Body: Texture.from('assets/ice-bullet.png'),
+      },
     };
   }
 
@@ -132,14 +144,14 @@ export default class Game {
 
     /** Game Loop 틱마다 update되는 system들 */
     this._systems.push(
-      new WaveSystem(
-        (positionX: number, positionY: number) =>
-          this._entityManager.createEntity(EntityKind.Tracker, {
-            [ComponentKind.Position]: { x: positionX, y: positionY },
-          }),
-        () => this._entityManager.getEntityCount(EntityKind.Tracker),
-        this.getStartTime.bind(this)
-      ),
+      // new WaveSystem(
+      //   (positionX: number, positionY: number) =>
+      //     this._entityManager.createEntity(EntityKind.Tracker, {
+      //       [ComponentKind.Position]: { x: positionX, y: positionY },
+      //     }),
+      //   () => this._entityManager.getTrackerCount(),
+      //   this.getStartTime.bind(this)
+      // ),
       new TrackSystem(
         this._playerEntity,
         this._componentPools[ComponentKind.State],
@@ -156,6 +168,13 @@ export default class Game {
       )
     );
 
+    new ShootingSystem(
+      this._stage,
+      this._componentPools[ComponentKind.Position][this._playerEntity],
+      (bulletKind: Bullet, initComponents?: PartialComponents) => {
+        this._entityManager.createEntity(bulletKind, initComponents);
+      }
+    );
     new VelocityInputSystem(
       this._componentPools[ComponentKind.Velocity][this._playerEntity]
     );
@@ -183,8 +202,14 @@ export default class Game {
     return this._stage;
   }
 
-  getTextureMap(kind: NonNullEntityKind): Record<string, Texture | Texture[]> {
-    return this._textureMaps[kind];
+  getTextureMap(kind: EntityKind): Record<string, Texture | Texture[]> {
+    const textureMap = this._textureMaps[kind];
+
+    if (textureMap === undefined) {
+      throw new Error('not existing texture map');
+    } else {
+      return textureMap;
+    }
   }
 
   generateTexture(graphics: Graphics): Texture {
