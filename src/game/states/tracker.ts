@@ -15,7 +15,7 @@ export class TrackerSpawningState extends AbstractState {
     spawningSprite.play();
     spawningSprite.loop = false;
     spawningSprite.anchor.set(0.5);
-    this._stateComponent.sprites = [spawningSprite];
+    this._stateComponent!.sprites = [spawningSprite];
     this._stage.addChild(spawningSprite);
     return this;
   }
@@ -23,7 +23,7 @@ export class TrackerSpawningState extends AbstractState {
   handleEvent(event: Event | CustomEvent) {
     switch (event.type) {
       case TrackerEvent.Spawn: {
-        this._stateComponent.state = new TrackerTrackingState(
+        this._stateComponent!.state = new TrackerTrackingState(
           this._stage,
           this._textureMap,
           this._stateComponent
@@ -42,7 +42,7 @@ export class TrackerTrackingState extends AbstractState {
     const shadowSprite = new Sprite(this._textureMap.Shadow as Texture);
     shadowSprite.zIndex = -1;
     shadowSprite.anchor.set(0.5);
-    this._stateComponent.sprites.push(shadowSprite);
+    this._stateComponent!.sprites.push(shadowSprite);
     this._stage.addChild(shadowSprite);
     return this;
   }

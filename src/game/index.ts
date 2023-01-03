@@ -1,4 +1,3 @@
-import EntityManager from '@game/EntityManager';
 import {
   Application,
   Container,
@@ -17,11 +16,14 @@ import {
   StateComponent,
   VelocityComponent,
 } from '@game/models/component';
-import { Bullet, Entity, EntityKind } from '@game/models/entity';
+import { Entity, EntityKind } from '@game/models/entity';
 import { ISystem } from '@game/models/system';
+
+import { BulletShootingState } from '@game/states/bullet';
 
 import MoveSystem from '@game/systems/MoveSystem';
 import RenderSystem from '@game/systems/RenderSystem';
+import ShootingSystem from '@game/systems/ShootingSystem';
 import TrackSystem from '@game/systems/TrackSystem';
 import VelocityInputSystem from '@game/systems/VelocityInputSystem';
 import WaveSystem from '@game/systems/WaveSystem';
@@ -30,7 +32,7 @@ import { increasingKeys } from '@game/utils/array';
 import { SealedArray } from '@game/utils/container';
 import { now } from '@game/utils/time';
 
-import ShootingSystem from './systems/ShootingSystem';
+import EntityManager from './EntityManager';
 
 settings.PREFER_ENV = ENV.WEBGL2;
 
@@ -122,14 +124,10 @@ export default class Game {
           new Graphics().beginFill(0xfcffe7).drawCircle(0, 0, 11).endFill()
         ),
       },
-      [EntityKind.BasicBullet]: {
-        Body: Texture.from('assets/basic-bullet.png'),
-      },
-      [EntityKind.FireBullet]: {
-        Body: Texture.from('assets/fire-bullet.png'),
-      },
-      [EntityKind.IceBullet]: {
-        Body: Texture.from('assets/ice-bullet.png'),
+      [EntityKind.Bullet]: {
+        BasicBody: Texture.from('assets/basic-bullet.png'),
+        FireBody: Texture.from('assets/fire-bullet.png'),
+        IceBody: Texture.from('assets/ice-bullet.png'),
       },
     };
   }
@@ -169,10 +167,19 @@ export default class Game {
     );
 
     new ShootingSystem(
-      this._stage,
+      this.getGameStage(),
       this._componentPools[ComponentKind.Position][this._playerEntity],
-      (bulletKind: Bullet, initComponents?: PartialComponents) => {
-        this._entityManager.createEntity(bulletKind, initComponents);
+      () =>
+        new BulletShootingState(
+          this.getGameStage(),
+          this.getTextureMap(EntityKind.Bullet)
+        ),
+      // curry(
+      //   (...args: ConstructorParameters<typeof AbstractState>) =>
+      //     new BulletShootingState(...args)
+      // )(this.getGameStage())(this.getTextureMap(EntityKind.Bullet)),
+      (initComponents: PartialComponents) => {
+        this._entityManager.createEntity(EntityKind.Bullet, initComponents);
       }
     );
     new VelocityInputSystem(

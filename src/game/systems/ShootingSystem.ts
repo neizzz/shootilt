@@ -1,5 +1,4 @@
 import {
-  Application,
   Container,
   Graphics,
   ISystem,
@@ -15,13 +14,12 @@ import {
   PartialComponents,
   PositionComponent,
 } from '@game/models/component';
-import { Bullet, EntityKind } from '@game/models/entity';
+
+import { BulletShootingState } from '@game/states/bullet';
 
 type Point = { x: number; y: number };
-type BulletCreator = (
-  bulletKind: Bullet,
-  initComponents?: PartialComponents
-) => void;
+type BulletStateCreator = () => BulletShootingState;
+type BulletCreator = (initComponents: PartialComponents) => void;
 
 export default class ShootingSystem implements ISystem {
   readonly MAX_SIGHT_LINE_LENGTH = GameContext.VIEW_HEIGHT / 2;
@@ -29,6 +27,7 @@ export default class ShootingSystem implements ISystem {
   private _stage: Container;
   private _playerPosition: PositionComponent; // TODO: player's context
   private _sightLineGraphics?: Graphics;
+  private _createBulletState: BulletStateCreator;
   private _createBullet: BulletCreator;
 
   private _dragStartPoint?: Point;
@@ -36,10 +35,12 @@ export default class ShootingSystem implements ISystem {
   constructor(
     stage: Container,
     playerPosition: PositionComponent,
+    bulletStateCreator: BulletStateCreator,
     bulletCreator: BulletCreator
   ) {
     this._stage = stage;
     this._playerPosition = playerPosition;
+    this._createBulletState = bulletStateCreator;
     this._createBullet = bulletCreator;
     this._stage.on('pointerdown', this._dragStart, this);
     this._stage.on('pointerup', this._dragEnd, this);
@@ -137,11 +138,18 @@ export default class ShootingSystem implements ISystem {
     const theta = this._sightLineGraphics!.rotation;
     const speed =
       1 + ((this.MAX_BULLET_SPEED - 1) * d) / this.MAX_SIGHT_LINE_LENGTH;
-    this._createBullet(EntityKind.BasicBullet, {
+
+    // TODO: decide bullet's kind
+
+    this._createBullet({
       [ComponentKind.Position]: this._playerPosition,
       [ComponentKind.Velocity]: {
         x: speed * Math.sin(theta),
         y: -1 * speed * Math.cos(theta),
+      },
+      [ComponentKind.State]: {
+        state: this._createBulletState().setFeature('Basic'),
+        rotation: theta,
       },
     });
 

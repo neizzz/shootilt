@@ -42,6 +42,7 @@ export type SpeedComponent = IComponent & {
 
 export type StateComponent = IComponent & {
   state?: IState;
+  rotation?: number;
   sprites: Sprite[];
 };
 

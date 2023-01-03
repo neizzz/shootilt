@@ -78,9 +78,7 @@ export default class EntityManager {
         break;
       }
 
-      case EntityKind.FireBullet:
-      case EntityKind.IceBullet:
-      case EntityKind.BasicBullet: {
+      case EntityKind.Bullet: {
         componentPools[ComponentKind.Position][newEntity].inUse = true;
         componentPools[ComponentKind.Position][newEntity].x =
           initComponents![ComponentKind.Position]!.x!;
@@ -97,11 +95,13 @@ export default class EntityManager {
 
         const stateComponent = componentPools[ComponentKind.State][newEntity];
         stateComponent.inUse = true;
-        stateComponent.state = new BulletShootingState(
-          this._game.getGameStage(),
-          this._game.getTextureMap(kind),
-          stateComponent
-        ).enter();
+        stateComponent.rotation =
+          initComponents![ComponentKind.State]!.rotation!;
+        stateComponent.state = (
+          initComponents![ComponentKind.State]!.state! as BulletShootingState
+        )
+          .setStateComponent(stateComponent)
+          .enter();
         break;
       }
 

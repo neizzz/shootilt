@@ -26,12 +26,13 @@ export default class RenderSystem implements ISystem {
         continue;
       }
 
-      const { sprites } = this._stateComponents[entity];
+      const { sprites, rotation } = this._stateComponents[entity];
       const { x, y } = this._positionComponents[entity];
 
       sprites.forEach((sprite) => {
         sprite.x = x;
         sprite.y = y;
+        sprite.rotation = rotation ?? 0;
       });
     }
   }
