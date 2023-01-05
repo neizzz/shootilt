@@ -4,7 +4,6 @@ export enum EntityKind {
   NULL = 'entity/null',
   Avoider = 'entity/avoider',
   Tracker = 'entity/tracker',
+  Bullet = 'entity/bullet',
 }
-
-export type NonNullEntityKind = Exclude<EntityKind, EntityKind.NULL>;
 

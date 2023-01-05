@@ -9,11 +9,17 @@ export enum ComponentKind {
   State = 'component/state',
 }
 
-export type MappedComponentFromKind = {
+type MappedComponentFromKind = {
   [ComponentKind.Position]: PositionComponent;
   [ComponentKind.Velocity]: VelocityComponent;
   [ComponentKind.Speed]: SpeedComponent;
   [ComponentKind.State]: StateComponent;
+};
+
+export type PartialComponents = {
+  [key in keyof MappedComponentFromKind]?: Partial<
+    MappedComponentFromKind[key]
+  >;
 };
 
 export interface IComponent {
@@ -36,6 +42,7 @@ export type SpeedComponent = IComponent & {
 
 export type StateComponent = IComponent & {
   state?: IState;
+  rotation?: number;
   sprites: Sprite[];
 };
 

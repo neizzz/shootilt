@@ -1,8 +1,8 @@
 import { AnimatedSprite, Sprite, Texture } from 'pixi.js';
 
-import { TrackerEvent } from '@game/models/event';
+import { GameEvent } from '@game/models/event';
 
-import { AbstractState } from './common';
+import { AbstractState, InvalidEventTypeError } from './common';
 
 export class TrackerSpawningState extends AbstractState {
   enter(): TrackerSpawningState {
@@ -10,25 +10,29 @@ export class TrackerSpawningState extends AbstractState {
       this._textureMap.SpawningBody as Texture[]
     );
     spawningSprite.onComplete = () => {
-      this.handleEvent(new CustomEvent(TrackerEvent.SpawnEnd));
+      this.handleEvent(new CustomEvent(GameEvent.Spawn));
     };
     spawningSprite.play();
     spawningSprite.loop = false;
     spawningSprite.anchor.set(0.5);
-    this._stateComponent.sprites = [spawningSprite];
+    this._stateComponent!.sprites = [spawningSprite];
     this._stage.addChild(spawningSprite);
     return this;
   }
 
   handleEvent(event: Event | CustomEvent) {
-    if (event.type === TrackerEvent.SpawnEnd) {
-      this._stateComponent.state = new TrackerTrackingState(
-        this._stage,
-        this._textureMap,
-        this._stateComponent
-      ).enter();
-    } else {
-      return;
+    switch (event.type) {
+      case GameEvent.Spawn: {
+        this._stateComponent!.state = new TrackerTrackingState(
+          this._stage,
+          this._textureMap,
+          this._stateComponent
+        ).enter();
+        break;
+      }
+
+      default:
+        throw new InvalidEventTypeError();
     }
   }
 }
@@ -38,7 +42,7 @@ export class TrackerTrackingState extends AbstractState {
     const shadowSprite = new Sprite(this._textureMap.Shadow as Texture);
     shadowSprite.zIndex = -1;
     shadowSprite.anchor.set(0.5);
-    this._stateComponent.sprites.push(shadowSprite);
+    this._stateComponent!.sprites.push(shadowSprite);
     this._stage.addChild(shadowSprite);
     return this;
   }

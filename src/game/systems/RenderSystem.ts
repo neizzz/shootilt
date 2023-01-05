@@ -1,4 +1,4 @@
-import Game from '@game';
+import { GameContext } from '@game';
 
 import { PositionComponent, StateComponent } from '@game/models/component';
 import { Entity } from '@game/models/entity';
@@ -17,17 +17,22 @@ export default class RenderSystem implements ISystem {
   }
 
   update() {
-    for (let entity = 0 as Entity; entity < Game.MAX_ENTITY_COUNT; entity++) {
+    for (
+      let entity = 0 as Entity;
+      entity < GameContext.MAX_ENTITY_COUNT;
+      entity++
+    ) {
       if (!this._checkInUse(entity)) {
         continue;
       }
 
-      const { sprites } = this._stateComponents[entity];
+      const { sprites, rotation } = this._stateComponents[entity];
       const { x, y } = this._positionComponents[entity];
 
       sprites.forEach((sprite) => {
         sprite.x = x;
         sprite.y = y;
+        sprite.rotation = rotation ?? 0;
       });
     }
   }

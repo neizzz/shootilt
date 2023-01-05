@@ -1,5 +1,8 @@
+import { StateComponent } from './component';
+
 export interface IState {
-  enter(): ThisType<IState>;
+  setStateComponent(stateComponent: StateComponent): IState;
+  enter(): IState;
   destroy(): void;
   handleEvent(event: Event | CustomEvent): void;
 }
