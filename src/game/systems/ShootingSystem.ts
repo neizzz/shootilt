@@ -58,7 +58,14 @@ export default class ShootingSystem implements ISystem {
   }
 
   private _calcTheta(diffX: number, diffY: number) {
-    let theta = diffX === 0 ? 0 : Math.atan(diffY / diffX);
+    let theta: number;
+
+    if (diffX === 0) {
+      theta = diffY < 0 ? 0 : Math.PI;
+    } else {
+      theta = Math.atan(diffY / diffX);
+    }
+
     if (diffX > 0) {
       theta += Math.PI / 2;
     } else if (diffX < 0) {
