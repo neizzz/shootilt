@@ -1,8 +1,7 @@
 import { Sprite, Texture } from 'pixi.js';
 
-import { BulletEvent } from '@game/models/event';
-
-import { AbstractState, InvalidEventTypeError } from './common';
+import { GameEvent } from './../models/event';
+import { AbstractState } from './common';
 
 export class BulletShootingState extends AbstractState {
   private _feature: 'Basic' | 'Fire' | 'Ice' = 'Basic';
@@ -13,7 +12,6 @@ export class BulletShootingState extends AbstractState {
   }
 
   enter(): BulletShootingState {
-    debugger;
     const sprite = new Sprite(
       this._textureMap[this._feature + 'Body'] as Texture
     );
@@ -25,14 +23,11 @@ export class BulletShootingState extends AbstractState {
 
   handleEvent(event: Event | CustomEvent) {
     switch (event.type) {
-      case BulletEvent.Out: {
+      case GameEvent.OutsideStage: {
         this._stateComponent!.state?.destroy();
         this._stateComponent!.state = undefined;
         break;
       }
-
-      default:
-        throw new InvalidEventTypeError();
     }
   }
 }

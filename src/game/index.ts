@@ -33,6 +33,7 @@ import { SealedArray } from '@game/utils/container';
 import { now } from '@game/utils/time';
 
 import EntityManager from './EntityManager';
+import EventDispatcher from './EventDispatcher';
 
 settings.PREFER_ENV = ENV.WEBGL2;
 
@@ -44,6 +45,7 @@ export default class Game {
   private _textureMaps!: Partial<
     Record<EntityKind, Record<string, Texture | Texture[]>>
   >;
+  private _eventDispatcher: EventDispatcher;
   private _entityManager: EntityManager;
   private _systems: ISystem[] = [];
   private _timeInfo: {
@@ -99,12 +101,15 @@ export default class Game {
     this._stage.interactive = true;
     this._stage.hitArea = this._gameApp.screen;
     this._gameApp.stage.addChild(this._stage);
+    this._eventDispatcher = new EventDispatcher(
+      this._componentPools[ComponentKind.State]
+    );
     this._entityManager = new EntityManager(this);
 
-    this.initTextureMaps();
+    this._initTextureMaps();
   }
 
-  initTextureMaps() {
+  private _initTextureMaps() {
     this._textureMaps = {
       [EntityKind.Avoider]: {
         Body: this.generateTexture(
@@ -115,13 +120,13 @@ export default class Game {
         SpawningBody: increasingKeys(40).map((num) => {
           const currentGraphics = new Graphics();
           currentGraphics.beginFill(0xeb455f);
-          currentGraphics.drawCircle(0, 0, 0.2 * num);
+          currentGraphics.drawCircle(0, 0, 0.15 * num);
           currentGraphics.endFill();
           currentGraphics.cacheAsBitmap = true;
           return this.generateTexture(currentGraphics);
         }),
         Shadow: this.generateTexture(
-          new Graphics().beginFill(0xfcffe7).drawCircle(0, 0, 11).endFill()
+          new Graphics().beginFill(0xfcffe7).drawCircle(0, 0, 8).endFill()
         ),
       },
       [EntityKind.Bullet]: {
@@ -142,14 +147,14 @@ export default class Game {
 
     /** Game Loop 틱마다 update되는 system들 */
     this._systems.push(
-      // new WaveSystem(
-      //   (positionX: number, positionY: number) =>
-      //     this._entityManager.createEntity(EntityKind.Tracker, {
-      //       [ComponentKind.Position]: { x: positionX, y: positionY },
-      //     }),
-      //   () => this._entityManager.getTrackerCount(),
-      //   this.getStartTime.bind(this)
-      // ),
+      new WaveSystem(
+        (positionX: number, positionY: number) =>
+          this._entityManager.createEntity(EntityKind.Tracker, {
+            [ComponentKind.Position]: { x: positionX, y: positionY },
+          }),
+        () => this._entityManager.getTrackerCount(),
+        this.getStartTime.bind(this)
+      ),
       new TrackSystem(
         this._playerEntity,
         this._componentPools[ComponentKind.State],
@@ -157,6 +162,7 @@ export default class Game {
         this._componentPools[ComponentKind.Speed]
       ),
       new MoveSystem(
+        this._eventDispatcher,
         this._componentPools[ComponentKind.Position],
         this._componentPools[ComponentKind.Velocity]
       ),
@@ -174,10 +180,6 @@ export default class Game {
           this.getGameStage(),
           this.getTextureMap(EntityKind.Bullet)
         ),
-      // curry(
-      //   (...args: ConstructorParameters<typeof AbstractState>) =>
-      //     new BulletShootingState(...args)
-      // )(this.getGameStage())(this.getTextureMap(EntityKind.Bullet)),
       (initComponents: PartialComponents) => {
         this._entityManager.createEntity(EntityKind.Bullet, initComponents);
       }

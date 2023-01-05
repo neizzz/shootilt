@@ -1,6 +1,6 @@
 import { AnimatedSprite, Sprite, Texture } from 'pixi.js';
 
-import { TrackerEvent } from '@game/models/event';
+import { GameEvent } from '@game/models/event';
 
 import { AbstractState, InvalidEventTypeError } from './common';
 
@@ -10,7 +10,7 @@ export class TrackerSpawningState extends AbstractState {
       this._textureMap.SpawningBody as Texture[]
     );
     spawningSprite.onComplete = () => {
-      this.handleEvent(new CustomEvent(TrackerEvent.Spawn));
+      this.handleEvent(new CustomEvent(GameEvent.Spawn));
     };
     spawningSprite.play();
     spawningSprite.loop = false;
@@ -22,7 +22,7 @@ export class TrackerSpawningState extends AbstractState {
 
   handleEvent(event: Event | CustomEvent) {
     switch (event.type) {
-      case TrackerEvent.Spawn: {
+      case GameEvent.Spawn: {
         this._stateComponent!.state = new TrackerTrackingState(
           this._stage,
           this._textureMap,

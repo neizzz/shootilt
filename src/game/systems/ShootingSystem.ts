@@ -23,7 +23,7 @@ type BulletCreator = (initComponents: PartialComponents) => void;
 
 export default class ShootingSystem implements ISystem {
   readonly MAX_SIGHT_LINE_LENGTH = GameContext.VIEW_HEIGHT / 2;
-  readonly MAX_BULLET_SPEED = 2.6;
+  readonly MAX_BULLET_SPEED = 4;
   private _stage: Container;
   private _playerPosition: PositionComponent; // TODO: player's context
   private _sightLineGraphics?: Graphics;
@@ -104,14 +104,14 @@ export default class ShootingSystem implements ISystem {
       .closePath();
     this._sightLineGraphics.endFill();
 
-    // rotate
+    /** rotate */
     this._sightLineGraphics.pivot = {
       x: HALF_WIDTH,
       y: d,
     };
     this._sightLineGraphics.rotation = theta;
 
-    // move
+    /** move */
     this._sightLineGraphics.position = {
       x: this._playerPosition.x,
       y: this._playerPosition.y,

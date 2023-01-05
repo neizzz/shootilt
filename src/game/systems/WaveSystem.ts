@@ -1,7 +1,9 @@
 import Game from '@game';
+
 import { TimeValue } from '@game/models/common';
 import { ISystem } from '@game/models/system';
-import { randomPosition } from '@game/utils/random';
+
+import { randomPosition } from '@game/utils/game-context';
 import { now } from '@game/utils/time';
 
 // TODO: FIXME: 이건 추후에, DifficultySystem으로 수정가능하게

@@ -1,17 +1,25 @@
+import EventDispatcher from '@game/EventDispatcher';
+
 import { GameContext } from '@game';
 
 import { PositionComponent, VelocityComponent } from '@game/models/component';
 import { Entity } from '@game/models/entity';
+import { GameEvent } from '@game/models/event';
 import { ISystem } from '@game/models/system';
 
+import { isOutsideStage } from '@game/utils/game-context';
+
 export default class MoveSystem implements ISystem {
+  private _eventDispatcher: EventDispatcher;
   private _positionComponents: PositionComponent[];
   private _velocityComponents: VelocityComponent[];
 
   constructor(
+    eventDispatcher: EventDispatcher,
     positionComponents: PositionComponent[],
     velocityComponents: VelocityComponent[]
   ) {
+    this._eventDispatcher = eventDispatcher;
     this._positionComponents = positionComponents;
     this._velocityComponents = velocityComponents;
   }
@@ -27,10 +35,12 @@ export default class MoveSystem implements ISystem {
       const position = this._positionComponents[entity];
       const velocity = this._velocityComponents[entity];
 
-      position.x = Math.max(0, position.x + velocity.x);
-      position.x = Math.min(GameContext.VIEW_WIDTH, position.x + velocity.x);
-      position.y = Math.max(0, position.y + velocity.y);
-      position.y = Math.min(GameContext.VIEW_HEIGHT, position.y + velocity.y);
+      position.x = position.x + velocity.x;
+      position.y = position.y + velocity.y;
+
+      if (isOutsideStage(position.x, position.y)) {
+        this._eventDispatcher.dispatchToEntity(entity, GameEvent.OutsideStage);
+      }
     }
   }
 
