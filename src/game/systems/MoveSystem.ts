@@ -38,7 +38,7 @@ export default class MoveSystem implements ISystem {
       position.x = position.x + velocity.x;
       position.y = position.y + velocity.y;
 
-      if (isOutsideStage(position.x, position.y)) {
+      if (position.removeIfOutside && isOutsideStage(position.x, position.y)) {
         this._eventDispatcher.dispatchToEntity(entity, GameEvent.OutsideStage);
       }
     }

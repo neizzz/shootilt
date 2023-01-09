@@ -11,6 +11,8 @@ import { TrackerSpawningState } from '@game/states/tracker';
 import { increasingKeys } from '@game/utils/array';
 import { CircularQueue } from '@game/utils/container';
 
+import { VelocityComponent } from './models/component';
+
 export default class EntityManager {
   private _game: Game;
   private _idleEntityQueue = new CircularQueue<Entity>(
@@ -38,15 +40,18 @@ export default class EntityManager {
 
     switch (kind) {
       case EntityKind.Avoider: {
-        componentPools[ComponentKind.Position][newEntity].inUse = true;
-        componentPools[ComponentKind.Position][newEntity].x =
-          GameContext.VIEW_WIDTH / 2;
-        componentPools[ComponentKind.Position][newEntity].y =
-          GameContext.VIEW_HEIGHT / 2;
+        const positionComponent =
+          componentPools[ComponentKind.Position][newEntity];
+        positionComponent.inUse = true;
+        positionComponent.x = GameContext.VIEW_WIDTH / 2;
+        positionComponent.y = GameContext.VIEW_HEIGHT / 2;
+        positionComponent.removeIfOutside = false;
 
-        componentPools[ComponentKind.Velocity][newEntity].inUse = true;
-        componentPools[ComponentKind.Velocity][newEntity].x = 0;
-        componentPools[ComponentKind.Velocity][newEntity].y = 0;
+        const velocityComponent =
+          componentPools[ComponentKind.Velocity][newEntity];
+        velocityComponent.inUse = true;
+        velocityComponent.x = 0;
+        velocityComponent.y = 0;
 
         const stateComponent = componentPools[ComponentKind.State][newEntity];
         stateComponent.inUse = true;
@@ -59,14 +64,16 @@ export default class EntityManager {
       }
 
       case EntityKind.Tracker: {
-        componentPools[ComponentKind.Position][newEntity].inUse = true;
-        componentPools[ComponentKind.Position][newEntity].x =
-          initComponents![ComponentKind.Position]!.x!;
-        componentPools[ComponentKind.Position][newEntity].y =
-          initComponents![ComponentKind.Position]!.y!;
+        const positionComponent =
+          componentPools[ComponentKind.Position][newEntity];
+        positionComponent.inUse = true;
+        positionComponent.x = initComponents![ComponentKind.Position]!.x!;
+        positionComponent.y = initComponents![ComponentKind.Position]!.y!;
+        positionComponent.removeIfOutside = false;
 
-        componentPools[ComponentKind.Speed][newEntity].inUse = true;
-        componentPools[ComponentKind.Speed][newEntity].speed = 1;
+        const speedComponent = componentPools[ComponentKind.Speed][newEntity];
+        speedComponent.inUse = true;
+        speedComponent.speed = 1;
 
         const stateComponent = componentPools[ComponentKind.State][newEntity];
         stateComponent.inUse = true;
@@ -79,17 +86,18 @@ export default class EntityManager {
       }
 
       case EntityKind.Bullet: {
-        componentPools[ComponentKind.Position][newEntity].inUse = true;
-        componentPools[ComponentKind.Position][newEntity].x =
-          initComponents![ComponentKind.Position]!.x!;
-        componentPools[ComponentKind.Position][newEntity].y =
-          initComponents![ComponentKind.Position]!.y!;
+        const positionComponent =
+          componentPools[ComponentKind.Position][newEntity];
+        positionComponent.inUse = true;
+        positionComponent.x = initComponents![ComponentKind.Position]!.x!;
+        positionComponent.y = initComponents![ComponentKind.Position]!.y!;
+        positionComponent.removeIfOutside = true;
 
-        componentPools[ComponentKind.Velocity][newEntity].inUse = true;
-        componentPools[ComponentKind.Velocity][newEntity].x =
-          initComponents![ComponentKind.Velocity]!.x!;
-        componentPools[ComponentKind.Velocity][newEntity].y =
-          initComponents![ComponentKind.Velocity]!.y!;
+        const velocityComponent =
+          componentPools[ComponentKind.Velocity][newEntity];
+        velocityComponent.inUse = true;
+        velocityComponent.x = initComponents![ComponentKind.Velocity]!.x!;
+        velocityComponent.y = initComponents![ComponentKind.Velocity]!.y!;
 
         // TODO: collide
 

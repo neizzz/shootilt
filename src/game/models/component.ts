@@ -29,6 +29,7 @@ export interface IComponent {
 export type PositionComponent = IComponent & {
   x: number;
   y: number;
+  removeIfOutside: boolean;
 };
 
 export type VelocityComponent = IComponent & {
