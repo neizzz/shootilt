@@ -74,6 +74,7 @@ export default class Game {
         inUse: false,
         x: NaN,
         y: NaN,
+        removeIfOutside: false,
       })
     ),
     [ComponentKind.State]: SealedArray.from<StateComponent>(
@@ -105,11 +106,9 @@ export default class Game {
       this._componentPools[ComponentKind.State]
     );
     this._entityManager = new EntityManager(this);
-
-    this._initTextureMaps();
   }
 
-  private _initTextureMaps() {
+  private async _initTextureMaps() {
     this._textureMaps = {
       [EntityKind.Avoider]: {
         Body: this.generateTexture(
@@ -130,14 +129,18 @@ export default class Game {
         ),
       },
       [EntityKind.Bullet]: {
-        BasicBody: Texture.from('assets/basic-bullet.png'),
-        FireBody: Texture.from('assets/fire-bullet.png'),
-        IceBody: Texture.from('assets/ice-bullet.png'),
+        BasicBody: await Texture.fromURL(`${__ASSET_DIR__}/basic-bullet.png`),
+        FireBody: await Texture.fromURL(`${__ASSET_DIR__}/fire-bullet.png`),
+        IceBody: await Texture.fromURL(`${__ASSET_DIR__}/ice-bullet.png`),
       },
     };
   }
 
-  start() {
+  async start() {
+    // TODO: Loading
+    // FIXME: 원래 여기있으면 안됨.
+    await this._initTextureMaps();
+
     document.body.appendChild(this._gameApp.view);
 
     this._timeInfo = Object.freeze({ start: now() });

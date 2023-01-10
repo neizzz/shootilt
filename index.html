@@ -9,7 +9,13 @@
     />
   </head>
   <body>
-    <script type="text/javascript" src="/src/gameContext.js"></script>
+    <script type="text/javascript">
+      window.GameContext = {
+        VIEW_WIDTH: window.innerWidth,
+        VIEW_HEIGHT: window.innerHeight,
+        MAX_ENTITY_COUNT: 1024,
+      };
+    </script>
     <script type="module" src="/src/index.ts"></script>
   </body>
 </html>
