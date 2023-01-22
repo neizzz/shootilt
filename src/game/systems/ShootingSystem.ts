@@ -1,7 +1,6 @@
 import {
   Container,
   Graphics,
-  ISystem,
   InteractionEvent,
   LINE_CAP,
   LINE_JOIN,
@@ -14,10 +13,10 @@ import {
   PartialComponents,
   PositionComponent,
 } from '@game/models/component';
+import { ISystem } from '@game/models/system';
 
 import { BulletShootingState } from '@game/states/bullet';
 
-type Point = { x: number; y: number };
 type BulletStateCreator = () => BulletShootingState;
 type BulletCreator = (initComponents: PartialComponents) => void;
 
@@ -30,7 +29,7 @@ export default class ShootingSystem implements ISystem {
   private _createBulletState: BulletStateCreator;
   private _createBullet: BulletCreator;
 
-  private _dragStartPoint?: Point;
+  private _dragStartPoint?: SimplePoint;
 
   constructor(
     stage: Container,
@@ -53,7 +52,7 @@ export default class ShootingSystem implements ISystem {
     this._stage.off('pointerupoutside', this._dragEnd, this);
   }
 
-  update(endPoint: Point) {
+  update(delta: number, endPoint: SimplePoint) {
     this._drawSightLine(this._dragStartPoint!, endPoint);
   }
 
@@ -74,7 +73,7 @@ export default class ShootingSystem implements ISystem {
     return theta;
   }
 
-  private _drawSightLine(basePoint: Point, targetPoint: Point) {
+  private _drawSightLine(basePoint: SimplePoint, targetPoint: SimplePoint) {
     if (!this._sightLineGraphics) {
       throw new Error('invalid sight line graphics');
     }
@@ -135,7 +134,7 @@ export default class ShootingSystem implements ISystem {
 
   private _dragMove(e: InteractionEvent) {
     const { x, y } = e.data.global;
-    this.update({ x, y });
+    this.update(NaN, { x, y });
   }
 
   private _dragEnd(e: InteractionEvent) {
