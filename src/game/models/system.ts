@@ -1,4 +1,5 @@
 export interface ISystem {
   destroy?: () => void;
-  update: (params?: any) => void;
+  update: (delta: number, params?: any) => void;
 }
+

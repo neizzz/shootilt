@@ -1,3 +1,4 @@
+import gsap from 'gsap';
 import {
   Application,
   Container,
@@ -7,7 +8,6 @@ import {
   settings,
 } from 'pixi.js';
 
-import { TimeValue } from '@game/models/common';
 import {
   ComponentKind,
   PartialComponents,
@@ -25,6 +25,7 @@ import MoveSystem from '@game/systems/MoveSystem';
 import RenderSystem from '@game/systems/RenderSystem';
 import ShootingSystem from '@game/systems/ShootingSystem';
 import TrackSystem from '@game/systems/TrackSystem';
+import TrailEffectSystem from '@game/systems/TrailEffectSystem';
 import VelocityInputSystem from '@game/systems/VelocityInputSystem';
 import WaveSystem from '@game/systems/WaveSystem';
 
@@ -49,8 +50,8 @@ export default class Game {
   private _entityManager: EntityManager;
   private _systems: ISystem[] = [];
   private _timeInfo: {
-    start: TimeValue;
-  } = { start: NaN as TimeValue };
+    start: number;
+  } = { start: NaN };
 
   private _componentPools = {
     [ComponentKind.Velocity]: SealedArray.from<VelocityComponent>(
@@ -138,7 +139,7 @@ export default class Game {
 
   async start() {
     // TODO: Loading
-    // FIXME: 원래 여기있으면 안됨.
+    // FIXME: 원래 여기있으면 안됨. 앱이 켜지고 인게임 진입 전에 하도록.
     await this._initTextureMaps();
 
     document.body.appendChild(this._gameApp.view);
@@ -148,7 +149,7 @@ export default class Game {
     /** create the player's avoider */
     this._playerEntity = this._entityManager.createEntity(EntityKind.Avoider);
 
-    /** Game Loop 틱마다 update되는 system들 */
+    /** update */
     this._systems.push(
       new WaveSystem(
         (positionX: number, positionY: number) =>
@@ -172,6 +173,11 @@ export default class Game {
       new RenderSystem(
         this._componentPools[ComponentKind.Position],
         this._componentPools[ComponentKind.State]
+      ),
+      new TrailEffectSystem(
+        this._componentPools[ComponentKind.Position][this._playerEntity],
+        this._gameApp.stage,
+        Texture.from(`${__ASSET_DIR__}/trail.png`)
       )
     );
 
@@ -192,8 +198,13 @@ export default class Game {
     );
 
     /** Game Loop */
-    this._gameApp.ticker.add((/** tickDelta TODO: frame sync */) => {
-      this._systems.forEach((system) => system.update());
+    this._gameApp.ticker
+      .add((delta) => {
+        this._systems.forEach((system) => system.update(delta));
+      })
+      .stop();
+    gsap.ticker.add(() => {
+      this._gameApp.ticker.update();
     });
   }
 
@@ -202,7 +213,7 @@ export default class Game {
     this._systems = [];
   }
 
-  getStartTime(): TimeValue {
+  getStartTime(): number {
     return this._timeInfo.start;
   }
 
