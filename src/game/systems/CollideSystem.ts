@@ -51,7 +51,6 @@ export default class CollideSystem implements ISystem {
         );
 
         if (dist < collide.radius + targetCollide.radius) {
-          debugger;
           this._eventDispatcher.dispatch(collide.eventToTarget!, targetEntity);
         }
       });

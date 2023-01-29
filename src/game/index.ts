@@ -36,6 +36,7 @@ import { SealedArray } from '@game/utils/container';
 import { now } from '@game/utils/time';
 
 import { ComponentPools } from './models/component';
+import DebugViewSystem from './systems/DebugViewSystem';
 import { generateTexture } from './utils/in-game';
 
 settings.PREFER_ENV = ENV.WEBGL2;
@@ -118,7 +119,7 @@ export default class Game {
     window.GameContext.renderer = this._gameApp.renderer;
   }
 
-  private async _initTextureMaps() {
+  private _initTextureMaps() {
     this._textureMaps = {
       [EntityKind.Avoider]: {
         Body: generateTexture(
@@ -169,20 +170,24 @@ export default class Game {
         () => this._entityManager.getTrackerCount(),
         this.getStartTime.bind(this)
       ),
-      // new TrackSystem(
-      //   this._playerEntity,
-      //   this._componentPools[ComponentKind.State],
-      //   this._componentPools[ComponentKind.Position],
-      //   this._componentPools[ComponentKind.Velocity]
-      // ),
+      new TrackSystem(
+        this._playerEntity,
+        this._componentPools[ComponentKind.State],
+        this._componentPools[ComponentKind.Position],
+        this._componentPools[ComponentKind.Velocity]
+      ),
       new MoveSystem(
         this._eventDispatcher,
         this._componentPools[ComponentKind.Position],
-        this._componentPools[ComponentKind.Velocity],
-        this._componentPools[ComponentKind.Collide]
+        this._componentPools[ComponentKind.Velocity]
       ),
       new CollideSystem(
         this._eventDispatcher,
+        this._componentPools[ComponentKind.Collide],
+        this._componentPools[ComponentKind.Position]
+      ),
+      new DebugViewSystem(
+        this.getGameStage(),
         this._componentPools[ComponentKind.Collide],
         this._componentPools[ComponentKind.Position]
       ),

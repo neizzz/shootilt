@@ -28,14 +28,16 @@ export const distance = (p1: SimplePoint, p2: SimplePoint): number => {
 
 /** NOTE: height > width */
 export const headCircleCenter = (
-  w: number,
-  h: number,
-  theta: number
+  width: number,
+  height: number,
+  rotation: number
 ): SimplePoint => {
-  const centerDist = h / 2 - w / 2;
+  const centerDist = height / 2 - width / 2;
+
   return {
-    x: centerDist * Math.cos(Math.PI / 2 - theta),
-    y: centerDist * Math.sin(Math.PI / 2 - theta),
+    // x: centerDist * Math.cos(Math.PI / 2 - rotation),
+    x: centerDist * Math.sin(rotation),
+    y: -centerDist * Math.cos(rotation),
   };
 };
 

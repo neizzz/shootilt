@@ -33,7 +33,6 @@ export default class HashSet<T extends string | number | symbol> {
   private _updateCache() {
     if (!this._dirtyFlag) return;
     this._cachedKeysRef.current = Object.keys(this._o) as T[];
-    console.log(this._cachedKeysRef);
     this._dirtyFlag = false;
   }
 }

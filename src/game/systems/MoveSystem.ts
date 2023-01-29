@@ -17,18 +17,15 @@ export default class MoveSystem implements ISystem {
   private _eventDispatcher: EventDispatcher;
   private _positionComponents: PositionComponent[];
   private _velocityComponents: VelocityComponent[];
-  private _collideComponents: CollideComponent[];
 
   constructor(
     eventDispatcher: EventDispatcher,
     positionComponents: PositionComponent[],
-    velocityComponents: VelocityComponent[],
-    collideComponents: CollideComponent[]
+    velocityComponents: VelocityComponent[]
   ) {
     this._eventDispatcher = eventDispatcher;
     this._positionComponents = positionComponents;
     this._velocityComponents = velocityComponents;
-    this._collideComponents = collideComponents;
   }
 
   update() {
@@ -48,13 +45,6 @@ export default class MoveSystem implements ISystem {
       if (position.removeIfOutside && isOutsideStage(position.x, position.y)) {
         this._eventDispatcher.dispatch(GameEvent.OutsideStage, entity);
       }
-
-      // const collide = this._collideComponents[entity];
-
-      // if (collide) {
-      //   collide.center.x = collide.center.x + velocity.vx;
-      //   collide.center.y = collide.center.y + velocity.vy;
-      // }
     }
   }
 
