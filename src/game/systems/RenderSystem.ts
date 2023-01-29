@@ -4,6 +4,8 @@ import { PositionComponent, StateComponent } from '@game/models/component';
 import { Entity } from '@game/models/entity';
 import { ISystem } from '@game/models/system';
 
+import { BulletShootingState } from '@game/states/bullet';
+
 export default class RenderSystem implements ISystem {
   private _positionComponents: PositionComponent[];
   private _stateComponents: StateComponent[];
@@ -22,9 +24,7 @@ export default class RenderSystem implements ISystem {
       entity < GameContext.MAX_ENTITY_COUNT;
       entity++
     ) {
-      if (!this._checkInUse(entity)) {
-        continue;
-      }
+      if (!this._checkInUse(entity)) continue;
 
       const { sprites, rotation } = this._stateComponents[entity];
       const { x, y } = this._positionComponents[entity];
@@ -32,7 +32,7 @@ export default class RenderSystem implements ISystem {
       sprites.forEach((sprite) => {
         sprite.x = x;
         sprite.y = y;
-        sprite.rotation = rotation ?? 0;
+        sprite.rotation = rotation;
       });
     }
   }

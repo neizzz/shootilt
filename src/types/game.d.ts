@@ -5,5 +5,7 @@ declare global {
     x: number;
     y: number;
   };
+
+  type CachedKeysRef<T> = { current: T[] };
 }
 

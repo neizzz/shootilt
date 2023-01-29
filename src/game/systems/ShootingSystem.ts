@@ -15,9 +15,6 @@ import {
 } from '@game/models/component';
 import { ISystem } from '@game/models/system';
 
-import { BulletShootingState } from '@game/states/bullet';
-
-type BulletStateCreator = () => BulletShootingState;
 type BulletCreator = (initComponents: PartialComponents) => void;
 
 export default class ShootingSystem implements ISystem {
@@ -26,7 +23,6 @@ export default class ShootingSystem implements ISystem {
   private _stage: Container;
   private _playerPosition: PositionComponent; // TODO: player's context
   private _sightLineGraphics?: Graphics;
-  private _createBulletState: BulletStateCreator;
   private _createBullet: BulletCreator;
 
   private _dragStartPoint?: SimplePoint;
@@ -34,12 +30,10 @@ export default class ShootingSystem implements ISystem {
   constructor(
     stage: Container,
     playerPosition: PositionComponent,
-    bulletStateCreator: BulletStateCreator,
     bulletCreator: BulletCreator
   ) {
     this._stage = stage;
     this._playerPosition = playerPosition;
-    this._createBulletState = bulletStateCreator;
     this._createBullet = bulletCreator;
     this._stage.on('pointerdown', this._dragStart, this);
     this._stage.on('pointerup', this._dragEnd, this);
@@ -150,11 +144,10 @@ export default class ShootingSystem implements ISystem {
     this._createBullet({
       [ComponentKind.Position]: this._playerPosition,
       [ComponentKind.Velocity]: {
-        x: speed * Math.sin(theta),
-        y: -1 * speed * Math.cos(theta),
+        vx: speed * Math.sin(theta),
+        vy: -1 * speed * Math.cos(theta),
       },
       [ComponentKind.State]: {
-        state: this._createBulletState().setFeature('Basic'),
         rotation: theta,
       },
     });

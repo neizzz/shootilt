@@ -2,6 +2,7 @@ import Game, { GameContext } from '@game';
 
 import { ComponentKind, PartialComponents } from '@game/models/component';
 import { Entity, EntityKind } from '@game/models/entity';
+import { GameEvent } from '@game/models/event';
 
 import { AvoiderControlledState } from '@game/states/avoider';
 import { BulletShootingState } from '@game/states/bullet';
@@ -10,8 +11,9 @@ import { TrackerSpawningState } from '@game/states/tracker';
 
 import { increasingKeys } from '@game/utils/array';
 import { CircularQueue } from '@game/utils/container';
+import { headCircleCenter } from '@game/utils/in-game';
 
-import { VelocityComponent } from './models/component';
+import HashSet from './utils/container/HashSet';
 
 export default class EntityManager {
   private _game: Game;
@@ -19,8 +21,7 @@ export default class EntityManager {
     GameContext.MAX_ENTITY_COUNT + 1
   );
 
-  /** FIXME: */
-  private _trackerCount = 0;
+  private _enemyEntitySet = new HashSet<Entity>();
 
   constructor(game: Game) {
     this._game = game;
@@ -29,11 +30,12 @@ export default class EntityManager {
     );
   }
 
-  /** FIXME: */
+  /** FIXME: 대전에서는 enemy === tracker가 아님 */
   getTrackerCount(): number {
-    return this._trackerCount;
+    return this._enemyEntitySet.length();
   }
 
+  /** entity 생성 시점에서 필요한 컴포넌트들 초기화 */
   createEntity(kind: EntityKind, initComponents?: PartialComponents): Entity {
     const newEntity = this._nextIdleEntity();
     const componentPools = this._game.getComponentPools();
@@ -50,15 +52,16 @@ export default class EntityManager {
         const velocityComponent =
           componentPools[ComponentKind.Velocity][newEntity];
         velocityComponent.inUse = true;
-        velocityComponent.x = 0;
-        velocityComponent.y = 0;
+        velocityComponent.vx = 0;
+        velocityComponent.vy = 0;
 
         const stateComponent = componentPools[ComponentKind.State][newEntity];
         stateComponent.inUse = true;
         stateComponent.state = new AvoiderControlledState(
+          newEntity,
+          componentPools,
           this._game.getGameStage(),
-          this._game.getTextureMap(EntityKind.Avoider),
-          stateComponent
+          this._game.getTextureMap(EntityKind.Avoider)
         ).enter();
         break;
       }
@@ -71,17 +74,21 @@ export default class EntityManager {
         positionComponent.y = initComponents![ComponentKind.Position]!.y!;
         positionComponent.removeIfOutside = false;
 
-        const speedComponent = componentPools[ComponentKind.Speed][newEntity];
-        speedComponent.inUse = true;
-        speedComponent.speed = 1;
+        const velocityComponent =
+          componentPools[ComponentKind.Velocity][newEntity];
+        velocityComponent.inUse = true;
+        velocityComponent.vx = 0;
+        velocityComponent.vy = 0;
 
         const stateComponent = componentPools[ComponentKind.State][newEntity];
         stateComponent.inUse = true;
         stateComponent.state = new TrackerSpawningState(
+          newEntity,
+          this._game.getComponentPools(),
           this._game.getGameStage(),
-          this._game.getTextureMap(EntityKind.Tracker),
-          stateComponent
+          this._game.getTextureMap(EntityKind.Tracker)
         ).enter();
+
         break;
       }
 
@@ -96,20 +103,32 @@ export default class EntityManager {
         const velocityComponent =
           componentPools[ComponentKind.Velocity][newEntity];
         velocityComponent.inUse = true;
-        velocityComponent.x = initComponents![ComponentKind.Velocity]!.x!;
-        velocityComponent.y = initComponents![ComponentKind.Velocity]!.y!;
-
-        // TODO: collide
+        velocityComponent.vx = initComponents![ComponentKind.Velocity]!.vx!;
+        velocityComponent.vy = initComponents![ComponentKind.Velocity]!.vy!;
 
         const stateComponent = componentPools[ComponentKind.State][newEntity];
         stateComponent.inUse = true;
         stateComponent.rotation =
           initComponents![ComponentKind.State]!.rotation!;
-        stateComponent.state = (
-          initComponents![ComponentKind.State]!.state! as BulletShootingState
-        )
-          .setStateComponent(stateComponent)
-          .enter();
+        stateComponent.state = new BulletShootingState(
+          newEntity,
+          this._game.getComponentPools(),
+          this._game.getGameStage(),
+          this._game.getTextureMap(EntityKind.Bullet)
+        ).enter();
+
+        const { width, height } = stateComponent.sprites[0].getBounds();
+        const collideComponent =
+          componentPools[ComponentKind.Collide][newEntity];
+        collideComponent.inUse = true;
+        collideComponent.distFromCenter = headCircleCenter(
+          width,
+          height,
+          stateComponent.rotation
+        );
+        collideComponent.radius = width / 2;
+        collideComponent.targetEntitiesRef = this._enemyEntitySet.keysRef();
+        collideComponent.eventToTarget = GameEvent.Dead;
         break;
       }
 
@@ -118,8 +137,8 @@ export default class EntityManager {
     }
 
     /** FIXME: */
-    if ((kind = EntityKind.Tracker)) {
-      this._trackerCount++;
+    if (kind === EntityKind.Tracker) {
+      this._enemyEntitySet.add(newEntity);
     }
     return newEntity as Entity;
   }
@@ -135,7 +154,7 @@ export default class EntityManager {
 
     /** FIXME: */
     if (stateComponent.state instanceof TrackerTrackingState) {
-      this._trackerCount--;
+      this._enemyEntitySet.remove(entity);
     }
 
     stateComponent.state?.destroy();
