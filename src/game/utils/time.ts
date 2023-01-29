@@ -1,3 +1,2 @@
-import { TimeValue } from '../models/common';
+export const now = (): number => Date.now();
 
-export const now = (): TimeValue => Date.now() as TimeValue;

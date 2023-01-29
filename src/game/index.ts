@@ -1,3 +1,5 @@
+import EntityManager from '@game/EntityManager';
+import EventDispatcher from '@game/EventDispatcher';
 import gsap from 'gsap';
 import {
   Application,
@@ -9,18 +11,18 @@ import {
 } from 'pixi.js';
 
 import {
+  CollideComponent,
   ComponentKind,
   PartialComponents,
   PositionComponent,
-  SpeedComponent,
   StateComponent,
   VelocityComponent,
 } from '@game/models/component';
 import { Entity, EntityKind } from '@game/models/entity';
+import { GameEvent } from '@game/models/event';
 import { ISystem } from '@game/models/system';
 
-import { BulletShootingState } from '@game/states/bullet';
-
+import CollideSystem from '@game/systems/CollideSystem';
 import MoveSystem from '@game/systems/MoveSystem';
 import RenderSystem from '@game/systems/RenderSystem';
 import ShootingSystem from '@game/systems/ShootingSystem';
@@ -33,8 +35,8 @@ import { increasingKeys } from '@game/utils/array';
 import { SealedArray } from '@game/utils/container';
 import { now } from '@game/utils/time';
 
-import EntityManager from './EntityManager';
-import EventDispatcher from './EventDispatcher';
+import { ComponentPools } from './models/component';
+import { generateTexture } from './utils/in-game';
 
 settings.PREFER_ENV = ENV.WEBGL2;
 
@@ -58,15 +60,8 @@ export default class Game {
       { length: GameContext.MAX_ENTITY_COUNT },
       () => ({
         inUse: false,
-        x: NaN,
-        y: NaN,
-      })
-    ),
-    [ComponentKind.Speed]: SealedArray.from<SpeedComponent>(
-      { length: GameContext.MAX_ENTITY_COUNT },
-      () => ({
-        inUse: false,
-        speed: NaN,
+        vx: NaN,
+        vy: NaN,
       })
     ),
     [ComponentKind.Position]: SealedArray.from<PositionComponent>(
@@ -83,10 +78,21 @@ export default class Game {
       () => ({
         inUse: false,
         state: undefined,
+        rotation: 0,
         sprites: [],
       })
     ),
-  };
+    [ComponentKind.Collide]: SealedArray.from<CollideComponent>(
+      { length: GameContext.MAX_ENTITY_COUNT },
+      () => ({
+        inUse: false,
+        distFromCenter: { x: NaN, y: NaN },
+        radius: NaN,
+        targetEntitiesRef: { current: [] },
+        eventToTarget: GameEvent.None,
+      })
+    ),
+  } as ComponentPools;
 
   private _playerEntity = NaN as Entity;
 
@@ -103,16 +109,19 @@ export default class Game {
     this._stage.interactive = true;
     this._stage.hitArea = this._gameApp.screen;
     this._gameApp.stage.addChild(this._stage);
+    this._entityManager = new EntityManager(this);
     this._eventDispatcher = new EventDispatcher(
+      this._entityManager,
       this._componentPools[ComponentKind.State]
     );
-    this._entityManager = new EntityManager(this);
+
+    window.GameContext.renderer = this._gameApp.renderer;
   }
 
   private async _initTextureMaps() {
     this._textureMaps = {
       [EntityKind.Avoider]: {
-        Body: this.generateTexture(
+        Body: generateTexture(
           new Graphics().beginFill(0x495c83).drawCircle(0, 0, 6).endFill()
         ),
       },
@@ -123,16 +132,17 @@ export default class Game {
           currentGraphics.drawCircle(0, 0, 0.15 * num);
           currentGraphics.endFill();
           currentGraphics.cacheAsBitmap = true;
-          return this.generateTexture(currentGraphics);
+          return generateTexture(currentGraphics);
         }),
-        Shadow: this.generateTexture(
+        Shadow: generateTexture(
           new Graphics().beginFill(0xfcffe7).drawCircle(0, 0, 8).endFill()
         ),
       },
       [EntityKind.Bullet]: {
-        BasicBody: await Texture.fromURL(`${__ASSET_DIR__}/basic-bullet.png`),
-        FireBody: await Texture.fromURL(`${__ASSET_DIR__}/fire-bullet.png`),
-        IceBody: await Texture.fromURL(`${__ASSET_DIR__}/ice-bullet.png`),
+        // BasicBody: Texture.from(`${__ASSET_DIR__}/basic-bullet.png`),
+        BasicBody: Texture.from(`${__ASSET_DIR__}/fire-bullet.png`),
+        FireBody: Texture.from(`${__ASSET_DIR__}/fire-bullet.png`),
+        IceBody: Texture.from(`${__ASSET_DIR__}/ice-bullet.png`),
       },
     };
   }
@@ -140,7 +150,7 @@ export default class Game {
   async start() {
     // TODO: Loading
     // FIXME: 원래 여기있으면 안됨. 앱이 켜지고 인게임 진입 전에 하도록.
-    await this._initTextureMaps();
+    this._initTextureMaps();
 
     document.body.appendChild(this._gameApp.view);
 
@@ -159,16 +169,22 @@ export default class Game {
         () => this._entityManager.getTrackerCount(),
         this.getStartTime.bind(this)
       ),
-      new TrackSystem(
-        this._playerEntity,
-        this._componentPools[ComponentKind.State],
-        this._componentPools[ComponentKind.Position],
-        this._componentPools[ComponentKind.Speed]
-      ),
+      // new TrackSystem(
+      //   this._playerEntity,
+      //   this._componentPools[ComponentKind.State],
+      //   this._componentPools[ComponentKind.Position],
+      //   this._componentPools[ComponentKind.Velocity]
+      // ),
       new MoveSystem(
         this._eventDispatcher,
         this._componentPools[ComponentKind.Position],
-        this._componentPools[ComponentKind.Velocity]
+        this._componentPools[ComponentKind.Velocity],
+        this._componentPools[ComponentKind.Collide]
+      ),
+      new CollideSystem(
+        this._eventDispatcher,
+        this._componentPools[ComponentKind.Collide],
+        this._componentPools[ComponentKind.Position]
       ),
       new RenderSystem(
         this._componentPools[ComponentKind.Position],
@@ -184,11 +200,6 @@ export default class Game {
     new ShootingSystem(
       this.getGameStage(),
       this._componentPools[ComponentKind.Position][this._playerEntity],
-      () =>
-        new BulletShootingState(
-          this.getGameStage(),
-          this.getTextureMap(EntityKind.Bullet)
-        ),
       (initComponents: PartialComponents) => {
         this._entityManager.createEntity(EntityKind.Bullet, initComponents);
       }
@@ -233,10 +244,6 @@ export default class Game {
     } else {
       return textureMap;
     }
-  }
-
-  generateTexture(graphics: Graphics): Texture {
-    return this._gameApp.renderer.generateTexture(graphics);
   }
 }
 

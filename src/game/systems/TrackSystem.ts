@@ -2,32 +2,38 @@ import { GameContext } from '@game';
 
 import {
   PositionComponent,
-  SpeedComponent,
   StateComponent,
+  VelocityComponent,
 } from '@game/models/component';
 import { Entity } from '@game/models/entity';
+import { ISystem } from '@game/models/system';
 
 import { TrackerTrackingState } from '@game/states/tracker';
 
-export default class TrackSystem {
+const TRACKING_SPEED = 1;
+const EPSILON = 0.1;
+
+export default class TrackSystem implements ISystem {
   private _targetEntity: Entity;
   private _stateComponents: StateComponent[];
   private _positionComponents: PositionComponent[];
-  private _speedComponents: SpeedComponent[];
+  private _velocityComponents: VelocityComponent[];
 
   constructor(
     targetEntity: Entity,
     stateComponents: StateComponent[],
     positionComponents: PositionComponent[],
-    speedComponents: SpeedComponent[]
+    velocityComponents: VelocityComponent[]
   ) {
     this._targetEntity = targetEntity;
     this._stateComponents = stateComponents;
     this._positionComponents = positionComponents;
-    this._speedComponents = speedComponents;
+    this._velocityComponents = velocityComponents;
   }
 
-  update() {
+  update(delta: number) {
+    const trackingSpeed = TRACKING_SPEED;
+    const epsilon = EPSILON;
     const targetPosition = this._positionComponents[this._targetEntity];
 
     for (
@@ -37,29 +43,25 @@ export default class TrackSystem {
     ) {
       if (!this._checkInUse(entity)) continue;
 
-      const speed = this._speedComponents[entity].speed;
+      const velocity = this._velocityComponents[entity];
       const position = this._positionComponents[entity];
 
       const vectorX = targetPosition.x - position.x;
       const vectorY = targetPosition.y - position.y;
-      const totalScala = Math.abs(vectorX) + Math.abs(vectorY);
-      const isZeroTotalScala = totalScala < 0.1;
+      const originSpeed = Math.sqrt(vectorX * vectorX + vectorY * vectorY);
+      const coef = originSpeed < epsilon ? 0 : trackingSpeed / originSpeed;
 
-      this._positionComponents[entity].x += isZeroTotalScala
-        ? 0
-        : (speed * vectorX) / totalScala;
-      this._positionComponents[entity].y += isZeroTotalScala
-        ? 0
-        : (speed * vectorY) / totalScala;
+      velocity.vx = vectorX * coef;
+      velocity.vy = vectorY * coef;
     }
   }
 
   private _checkInUse(entity: Entity) {
     return (
       this._stateComponents[entity].inUse &&
-      this._stateComponents[entity].state instanceof TrackerTrackingState &&
-      this._positionComponents[entity].inUse &&
-      this._speedComponents[entity].inUse
+      this._stateComponents[entity].state instanceof TrackerTrackingState
+      // this._positionComponents[entity].inUse &&
+      // this._velocityComponents[entity].inUse
     );
   }
 }

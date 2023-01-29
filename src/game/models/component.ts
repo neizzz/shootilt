@@ -1,5 +1,7 @@
 import { Sprite } from 'pixi.js';
 
+import { Entity } from './entity';
+import { GameEvent } from './event';
 import { IState } from './state';
 
 export enum ComponentKind {
@@ -7,13 +9,21 @@ export enum ComponentKind {
   Velocity = 'component/velocity',
   Speed = 'component/speed',
   State = 'component/state',
+  Collide = 'component/collide',
 }
 
 type MappedComponentFromKind = {
   [ComponentKind.Position]: PositionComponent;
   [ComponentKind.Velocity]: VelocityComponent;
-  [ComponentKind.Speed]: SpeedComponent;
   [ComponentKind.State]: StateComponent;
+  [ComponentKind.Collide]: CollideComponent;
+};
+
+export type ComponentPools = {
+  [ComponentKind.Position]: PositionComponent[];
+  [ComponentKind.Velocity]: VelocityComponent[];
+  [ComponentKind.State]: StateComponent[];
+  [ComponentKind.Collide]: CollideComponent[];
 };
 
 export type PartialComponents = {
@@ -33,17 +43,20 @@ export type PositionComponent = IComponent & {
 };
 
 export type VelocityComponent = IComponent & {
-  x: number;
-  y: number;
-};
-
-export type SpeedComponent = IComponent & {
-  speed: number;
+  vx: number;
+  vy: number;
 };
 
 export type StateComponent = IComponent & {
   state?: IState;
-  rotation?: number;
+  rotation: number;
   sprites: Sprite[];
+};
+
+export type CollideComponent = IComponent & {
+  distFromCenter: SimplePoint /** relative center point from the pivot sprite's center */;
+  radius: number;
+  targetEntitiesRef?: CachedKeysRef<Entity> /** 단방향 */;
+  eventToTarget?: GameEvent;
 };
 

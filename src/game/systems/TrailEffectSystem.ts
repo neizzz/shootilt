@@ -39,7 +39,7 @@ export default class TrailEffectSystem implements ISystem {
     stage.addChildAt(this._rope, 0);
   }
 
-  update(delta: number) {
+  update() {
     const duration = 5;
     const { x, y } = this._targetPositionComponent;
     gsap.to(
