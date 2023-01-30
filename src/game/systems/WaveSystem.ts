@@ -44,7 +44,6 @@ export default class WaveSystem implements ISystem {
 
     for (let i = 0; i < currentAmount; i++) {
       const position = randomPosition();
-      console.log(position);
       this._addTracker(position.x, position.y);
     }
 

@@ -19,7 +19,6 @@ export default class EventDispatcher {
 
   dispatch(event: GameEvent, entity: Entity) {
     if (event === GameEvent.Dead) {
-      // console.log('dead entity:', entity);
       this._entityManager.removeEntity(entity);
     }
 

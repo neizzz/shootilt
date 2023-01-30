@@ -4,6 +4,7 @@ import {
   InteractionEvent,
   LINE_CAP,
   LINE_JOIN,
+  Sprite,
 } from 'pixi.js';
 
 import { GameContext } from '@game';
@@ -15,6 +16,8 @@ import {
 } from '@game/models/component';
 import { ISystem } from '@game/models/system';
 
+import { generateTexture } from '@game/utils/in-game';
+
 type BulletCreator = (initComponents: PartialComponents) => void;
 
 export default class ShootingSystem implements ISystem {
@@ -23,6 +26,7 @@ export default class ShootingSystem implements ISystem {
   private _stage: Container;
   private _playerPosition: PositionComponent; // TODO: player's context
   private _sightLineGraphics?: Graphics;
+  private _sightLineSprite?: Sprite;
   private _createBullet: BulletCreator;
 
   private _dragStartPoint?: SimplePoint;
@@ -68,9 +72,8 @@ export default class ShootingSystem implements ISystem {
   }
 
   private _drawSightLine(basePoint: SimplePoint, targetPoint: SimplePoint) {
-    if (!this._sightLineGraphics) {
-      throw new Error('invalid sight line graphics');
-    }
+    this._reset();
+    this._sightLineGraphics = new Graphics();
 
     const diffX = targetPoint.x - basePoint.x;
     const diffY = targetPoint.y - basePoint.y;
@@ -84,7 +87,6 @@ export default class ShootingSystem implements ISystem {
     const HALF_WIDTH = WIDTH / 2;
     const COLOR = 0xffffff;
 
-    this._sightLineGraphics.clear();
     this._sightLineGraphics.beginFill(COLOR, 0.6);
     this._sightLineGraphics
       .lineStyle({
@@ -116,13 +118,16 @@ export default class ShootingSystem implements ISystem {
       x: this._playerPosition.x,
       y: this._playerPosition.y,
     };
+
+    this._sightLineSprite = new Sprite(
+      generateTexture(this._sightLineGraphics)
+    );
+    this._stage.addChild(this._sightLineGraphics);
   }
 
   private _dragStart(e: InteractionEvent) {
     const { x, y } = e.data.global;
     this._dragStartPoint = { x, y };
-    this._sightLineGraphics = new Graphics();
-    this._stage.addChild(this._sightLineGraphics);
     this._stage.on('pointermove', this._dragMove, this);
   }
 
@@ -152,10 +157,21 @@ export default class ShootingSystem implements ISystem {
       },
     });
 
+    this._reset();
     this._dragStartPoint = undefined;
-    this._stage.removeChild(this._sightLineGraphics!);
-    this._sightLineGraphics!.destroy();
     this._stage.off('pointermove', this._dragMove, this);
+  }
+
+  private _reset() {
+    if (this._sightLineGraphics) {
+      this._sightLineGraphics.destroy();
+      this._sightLineGraphics = undefined;
+    }
+
+    if (this._sightLineSprite) {
+      this._sightLineSprite.destroy();
+      this._sightLineSprite = undefined;
+    }
   }
 }
 

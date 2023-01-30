@@ -22,10 +22,10 @@ export default class VelocityInputSystem implements ISystem {
     );
   }
 
-  update({ x, y }: Omit<VelocityComponent, keyof IComponent>) {
+  update(delta: number, { vx, vy }: Omit<VelocityComponent, keyof IComponent>) {
     if (!this._targetVelocityComponent.inUse) return;
-    this._targetVelocityComponent.x = x;
-    this._targetVelocityComponent.y = y;
+    this._targetVelocityComponent.vx = vx;
+    this._targetVelocityComponent.vy = vy;
   }
 
   private _deviceOrientationListener(e: DeviceOrientationEvent) {
@@ -38,7 +38,7 @@ export default class VelocityInputSystem implements ISystem {
       throw new Error('device orientation event is not supported');
     }
 
-    this.update(this._smoother({ beta, gamma }));
+    this.update(NaN, this._smoother({ beta, gamma }));
   }
 
   private _smoother(params: {
@@ -57,8 +57,9 @@ export default class VelocityInputSystem implements ISystem {
     gamma = Math.min(MAX_ANGLE_VALUE, gamma);
 
     return {
-      x: (beta * MAX_VELOCITY) / MAX_ANGLE_VALUE,
-      y: (-1 * (gamma * MAX_VELOCITY)) / MAX_ANGLE_VALUE,
+      vx: (beta * MAX_VELOCITY) / MAX_ANGLE_VALUE,
+      vy: (-1 * (gamma * MAX_VELOCITY)) / MAX_ANGLE_VALUE,
     };
   }
 }
+

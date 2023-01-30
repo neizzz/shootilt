@@ -1,8 +1,4 @@
-import { Graphics, Sprite, Texture } from 'pixi.js';
-
-import { ComponentKind } from '@game/models/component';
-
-import { generateTexture } from '@game/utils/in-game';
+import { Sprite, Texture } from 'pixi.js';
 
 import { GameEvent } from './../models/event';
 import { AbstractState } from './common';
