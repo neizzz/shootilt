@@ -8,7 +8,7 @@ import { ISystem } from '@game/models/system';
 
 import { generateTexture } from '@game/utils/in-game';
 
-export default class DebugViewSystem implements ISystem {
+export default class DebugCollideAreaViewSystem implements ISystem {
   private _stage: Container;
   private _collideComponents: CollideComponent[];
   private _positionComponents: PositionComponent[];

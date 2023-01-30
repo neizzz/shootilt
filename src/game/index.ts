@@ -18,11 +18,13 @@ import {
   StateComponent,
   VelocityComponent,
 } from '@game/models/component';
+import { ComponentPools } from '@game/models/component';
 import { Entity, EntityKind } from '@game/models/entity';
 import { GameEvent } from '@game/models/event';
 import { ISystem } from '@game/models/system';
 
 import CollideSystem from '@game/systems/CollideSystem';
+import DebugCollideAreaViewSystem from '@game/systems/DebugCollideAreaViewSystem';
 import MoveSystem from '@game/systems/MoveSystem';
 import RenderSystem from '@game/systems/RenderSystem';
 import ShootingSystem from '@game/systems/ShootingSystem';
@@ -33,11 +35,10 @@ import WaveSystem from '@game/systems/WaveSystem';
 
 import { increasingKeys } from '@game/utils/array';
 import { SealedArray } from '@game/utils/container';
+import { generateTexture } from '@game/utils/in-game';
 import { now } from '@game/utils/time';
 
-import { ComponentPools } from './models/component';
-import DebugViewSystem from './systems/DebugViewSystem';
-import { generateTexture } from './utils/in-game';
+import DebugDashboardSystem from './systems/DebugDashboardSystem';
 
 settings.PREFER_ENV = ENV.WEBGL2;
 
@@ -186,11 +187,12 @@ export default class Game {
         this._componentPools[ComponentKind.Collide],
         this._componentPools[ComponentKind.Position]
       ),
-      new DebugViewSystem(
+      new DebugCollideAreaViewSystem(
         this.getGameStage(),
         this._componentPools[ComponentKind.Collide],
         this._componentPools[ComponentKind.Position]
       ),
+      new DebugDashboardSystem(),
       new RenderSystem(
         this._componentPools[ComponentKind.Position],
         this._componentPools[ComponentKind.State]
