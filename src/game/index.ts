@@ -201,29 +201,21 @@ export default class Game {
         this._componentPools[ComponentKind.Position][this._playerEntity],
         this._gameApp.stage,
         Texture.from(`${__ASSET_DIR__}/trail.png`)
+      ),
+      new ShootingSystem(
+        this.getGameStage(),
+        this._componentPools[ComponentKind.Position][this._playerEntity],
+        (initComponents: PartialComponents) => {
+          this._entityManager.createEntity(EntityKind.Bullet, initComponents);
+        }
       )
     );
 
-    new ShootingSystem(
-      this.getGameStage(),
-      this._componentPools[ComponentKind.Position][this._playerEntity],
-      (initComponents: PartialComponents) => {
-        this._entityManager.createEntity(EntityKind.Bullet, initComponents);
-      }
-    );
     new VelocityInputSystem(
       this._componentPools[ComponentKind.Velocity][this._playerEntity]
     );
 
-    /** Game Loop */
-    this._gameApp.ticker
-      .add((delta) => {
-        this._systems.forEach((system) => system.update(delta));
-      })
-      .stop();
-    gsap.ticker.add(() => {
-      this._gameApp.ticker.update();
-    });
+    this._startGameLoop();
   }
 
   end() {
@@ -251,6 +243,17 @@ export default class Game {
     } else {
       return textureMap;
     }
+  }
+
+  private _startGameLoop() {
+    this._gameApp.ticker
+      .add((delta) => {
+        this._systems.forEach((system) => system.update(delta));
+      })
+      .stop();
+    gsap.ticker.add(() => {
+      this._gameApp.ticker.update();
+    });
   }
 }
 
