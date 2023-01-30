@@ -7,8 +7,6 @@ import {
   Sprite,
 } from 'pixi.js';
 
-import { GameContext } from '@game';
-
 import {
   ComponentKind,
   PartialComponents,
@@ -16,20 +14,27 @@ import {
 } from '@game/models/component';
 import { ISystem } from '@game/models/system';
 
-import { generateTexture } from '@game/utils/in-game';
+import { distance, theta } from '@game/utils/in-game';
 
 type BulletCreator = (initComponents: PartialComponents) => void;
 
+const ARROW_WIDTH = 24;
+const ARROW_HALF_WIDTH = ARROW_WIDTH / 2;
+const MAX_SIGHT_LINE_LENGTH = 200;
+const MAX_BULLET_SPEED = 4;
+const COLOR = 0xffffff;
+
 export default class ShootingSystem implements ISystem {
-  readonly MAX_SIGHT_LINE_LENGTH = GameContext.VIEW_HEIGHT / 2;
-  readonly MAX_BULLET_SPEED = 4;
   private _stage: Container;
   private _playerPosition: PositionComponent; // TODO: player's context
-  private _sightLineGraphics?: Graphics;
-  private _sightLineSprite?: Sprite;
   private _createBullet: BulletCreator;
 
-  private _dragStartPoint?: SimplePoint;
+  private _sightLineGraphics?: Graphics;
+  private _dragContext?: {
+    startPoint: SimplePoint;
+    distance: number;
+    rotation: number;
+  };
 
   constructor(
     stage: Container,
@@ -50,43 +55,33 @@ export default class ShootingSystem implements ISystem {
     this._stage.off('pointerupoutside', this._dragEnd, this);
   }
 
-  update(delta: number, endPoint: SimplePoint) {
-    this._drawSightLine(this._dragStartPoint!, endPoint);
+  update() {
+    if (!this._sightLineGraphics || !this._dragContext) return;
+
+    const { distance, rotation } = this._dragContext;
+
+    /** rotate */
+    this._sightLineGraphics.pivot = {
+      x: ARROW_HALF_WIDTH,
+      y: distance,
+    };
+    this._sightLineGraphics.rotation = rotation;
+
+    /** move */
+    this._sightLineGraphics.position = {
+      x: this._playerPosition.x,
+      y: this._playerPosition.y,
+    };
   }
 
-  private _calcTheta(diffX: number, diffY: number) {
-    let theta: number;
-
-    if (diffX === 0) {
-      theta = diffY < 0 ? 0 : Math.PI;
-    } else {
-      theta = Math.atan(diffY / diffX);
+  private _drawSightLine() {
+    if (!this._sightLineGraphics || !this._dragContext) {
+      throw new Error('invalid function call');
     }
 
-    if (diffX > 0) {
-      theta += Math.PI / 2;
-    } else if (diffX < 0) {
-      theta += Math.PI + Math.PI / 2;
-    }
-    return theta;
-  }
+    const d = this._dragContext.distance;
 
-  private _drawSightLine(basePoint: SimplePoint, targetPoint: SimplePoint) {
-    this._reset();
-    this._sightLineGraphics = new Graphics();
-
-    const diffX = targetPoint.x - basePoint.x;
-    const diffY = targetPoint.y - basePoint.y;
-
-    const theta = this._calcTheta(diffX, diffY);
-    const d = Math.min(
-      Math.sqrt(diffX * diffX + diffY * diffY),
-      this.MAX_SIGHT_LINE_LENGTH
-    );
-    const WIDTH = 24;
-    const HALF_WIDTH = WIDTH / 2;
-    const COLOR = 0xffffff;
-
+    this._sightLineGraphics.clear();
     this._sightLineGraphics.beginFill(COLOR, 0.6);
     this._sightLineGraphics
       .lineStyle({
@@ -98,51 +93,48 @@ export default class ShootingSystem implements ISystem {
         // cap: LINE_CAP.,
       })
       .moveTo(0, 14)
-      .lineTo(HALF_WIDTH, 0)
-      .lineTo(WIDTH, 14)
-      .lineTo(HALF_WIDTH + 4, 10)
-      .lineTo(HALF_WIDTH, d)
-      .lineTo(HALF_WIDTH - 4, 10)
+      .lineTo(ARROW_HALF_WIDTH, 0)
+      .lineTo(ARROW_WIDTH, 14)
+      .lineTo(ARROW_HALF_WIDTH + 4, 10)
+      .lineTo(ARROW_HALF_WIDTH, d)
+      .lineTo(ARROW_HALF_WIDTH - 4, 10)
       .closePath();
     this._sightLineGraphics.endFill();
-
-    /** rotate */
-    this._sightLineGraphics.pivot = {
-      x: HALF_WIDTH,
-      y: d,
-    };
-    this._sightLineGraphics.rotation = theta;
-
-    /** move */
-    this._sightLineGraphics.position = {
-      x: this._playerPosition.x,
-      y: this._playerPosition.y,
-    };
-
-    this._sightLineSprite = new Sprite(
-      generateTexture(this._sightLineGraphics)
-    );
-    this._stage.addChild(this._sightLineGraphics);
   }
 
   private _dragStart(e: InteractionEvent) {
     const { x, y } = e.data.global;
-    this._dragStartPoint = { x, y };
+    this._dragContext = {
+      startPoint: { x, y },
+      distance: 0,
+      rotation: 0,
+    };
+    this._sightLineGraphics = new Graphics();
+    this._stage.addChild(this._sightLineGraphics);
     this._stage.on('pointermove', this._dragMove, this);
   }
 
   private _dragMove(e: InteractionEvent) {
+    if (!this._dragContext) {
+      throw new Error('drag context is not initialized');
+    }
+
     const { x, y } = e.data.global;
-    this.update(NaN, { x, y });
+    this._dragContext.distance = Math.min(
+      distance(this._dragContext.startPoint, { x, y }),
+      MAX_SIGHT_LINE_LENGTH
+    );
+    this._dragContext.rotation = theta(this._dragContext.startPoint, { x, y });
+
+    this._drawSightLine();
   }
 
   private _dragEnd(e: InteractionEvent) {
-    if (!this._dragStartPoint) return;
+    if (!this._dragContext) return;
 
     const d = this._sightLineGraphics!.pivot.y;
     const theta = this._sightLineGraphics!.rotation;
-    const speed =
-      1 + ((this.MAX_BULLET_SPEED - 1) * d) / this.MAX_SIGHT_LINE_LENGTH;
+    const speed = 1 + ((MAX_BULLET_SPEED - 1) * d) / MAX_SIGHT_LINE_LENGTH;
 
     // TODO: decide bullet's kind
 
@@ -158,7 +150,6 @@ export default class ShootingSystem implements ISystem {
     });
 
     this._reset();
-    this._dragStartPoint = undefined;
     this._stage.off('pointermove', this._dragMove, this);
   }
 
@@ -168,9 +159,8 @@ export default class ShootingSystem implements ISystem {
       this._sightLineGraphics = undefined;
     }
 
-    if (this._sightLineSprite) {
-      this._sightLineSprite.destroy();
-      this._sightLineSprite = undefined;
+    if (this._dragContext) {
+      this._dragContext = undefined;
     }
   }
 }
