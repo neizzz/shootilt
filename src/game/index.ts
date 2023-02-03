@@ -248,7 +248,7 @@ export default class Game {
   private _startGameLoop() {
     this._gameApp.ticker
       .add((delta) => {
-        this._systems.forEach((system) => system.update(delta));
+        this._systems.forEach((system) => system.update(delta)); // convert to second
       })
       .stop();
     gsap.ticker.add(() => {

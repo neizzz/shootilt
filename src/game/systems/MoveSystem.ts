@@ -2,11 +2,7 @@ import EventDispatcher from '@game/EventDispatcher';
 
 import { GameContext } from '@game';
 
-import {
-  CollideComponent,
-  PositionComponent,
-  VelocityComponent,
-} from '@game/models/component';
+import { PositionComponent, VelocityComponent } from '@game/models/component';
 import { Entity } from '@game/models/entity';
 import { GameEvent } from '@game/models/event';
 import { ISystem } from '@game/models/system';
@@ -28,7 +24,7 @@ export default class MoveSystem implements ISystem {
     this._velocityComponents = velocityComponents;
   }
 
-  update() {
+  update(delta: number) {
     for (
       let entity = 0 as Entity;
       entity < GameContext.MAX_ENTITY_COUNT;
@@ -39,8 +35,8 @@ export default class MoveSystem implements ISystem {
       const position = this._positionComponents[entity];
       const velocity = this._velocityComponents[entity];
 
-      position.x = position.x + velocity.vx;
-      position.y = position.y + velocity.vy;
+      position.x = position.x + velocity.vx * delta;
+      position.y = position.y + velocity.vy * delta;
 
       if (position.removeIfOutside && isOutsideStage(position.x, position.y)) {
         this._eventDispatcher.dispatch(GameEvent.OutsideStage, entity);
