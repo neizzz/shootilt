@@ -10,7 +10,7 @@ import { ISystem } from '@game/models/system';
 
 import { TrackerTrackingState } from '@game/states/tracker';
 
-const TRACKING_SPEED = 1;
+const TRACKING_SPEED = 2;
 const EPSILON = 0.1;
 
 export default class TrackSystem implements ISystem {
@@ -49,7 +49,8 @@ export default class TrackSystem implements ISystem {
       const vectorX = targetPosition.x - position.x;
       const vectorY = targetPosition.y - position.y;
       const originSpeed = Math.sqrt(vectorX * vectorX + vectorY * vectorY);
-      const coef = originSpeed < epsilon ? 0 : trackingSpeed / originSpeed;
+      const coef =
+        originSpeed < epsilon ? 0 : (delta * trackingSpeed) / originSpeed;
 
       velocity.vx = vectorX * coef;
       velocity.vy = vectorY * coef;

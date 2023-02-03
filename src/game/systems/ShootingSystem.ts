@@ -1,11 +1,4 @@
-import {
-  Container,
-  Graphics,
-  InteractionEvent,
-  LINE_CAP,
-  LINE_JOIN,
-  Sprite,
-} from 'pixi.js';
+import { Container, Graphics, InteractionEvent, LINE_JOIN } from 'pixi.js';
 
 import {
   ComponentKind,
@@ -21,7 +14,7 @@ type BulletCreator = (initComponents: PartialComponents) => void;
 const ARROW_WIDTH = 24;
 const ARROW_HALF_WIDTH = ARROW_WIDTH / 2;
 const MAX_SIGHT_LINE_LENGTH = 200;
-const MAX_BULLET_SPEED = 4;
+const MAX_BULLET_SPEED = 6;
 const COLOR = 0xffffff;
 
 export default class ShootingSystem implements ISystem {
