@@ -13,9 +13,11 @@
     "moduleResolution": "Node",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "jsx": "react-jsx",
     "noEmit": true,
     "baseUrl": "./",
     "paths": {
+      "@client/*": ["src/client/*"],
       "@assets/*": ["assets/*"],
       "@game": ["src/game/index.ts"],
       "@game/*": ["src/game/*"]
