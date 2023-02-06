@@ -1,4 +1,4 @@
-const { Renderer } = require('pixi.js');
+import { Renderer } from 'pixi.js';
 
 window.GameContext = {
   VIEW_WIDTH: window.innerWidth,

@@ -1,5 +1,7 @@
 import Game from '@game';
 
+import './gameContext';
+
 declare global {
   interface Window {
     GameContext: any;

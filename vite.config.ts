@@ -13,7 +13,6 @@ export default defineConfig(({ mode }) => {
       minify: isProduction ? true : false,
     },
     define: {
-      // __ASSET_DIR__: mode === 'production' ? '"assets"' : '"assets"',
       __ASSET_DIR__: '"/assets/images"',
     },
     plugins: [tsconfigPaths(), basicSsl()],
