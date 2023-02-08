@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 
-import App from '@client/index';
+import App from '@client/App';
 
 // import Game from '@game';
 import './gameContext';
