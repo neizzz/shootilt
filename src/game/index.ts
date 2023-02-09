@@ -149,12 +149,12 @@ export default class Game {
     };
   }
 
-  async start() {
+  async start(parentEl: HTMLDivElement) {
     // TODO: Loading
     // FIXME: 원래 여기있으면 안됨. 앱이 켜지고 인게임 진입 전에 하도록.
     this._initTextureMaps();
 
-    document.body.appendChild(this._gameApp.view);
+    parentEl.appendChild(this._gameApp.view);
 
     this._timeInfo = Object.freeze({ start: now() });
 

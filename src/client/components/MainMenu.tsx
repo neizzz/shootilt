@@ -20,7 +20,7 @@ const StyledContainer = styled.div<{ startGame: boolean }>`
   flex-direction: column;
   align-items: center;
 
-  transition: 400ms transform;
+  transition: 300ms transform;
   transform: translateX(${({ startGame }) => (startGame ? '300px' : 0)})
     translateZ(0);
 `;

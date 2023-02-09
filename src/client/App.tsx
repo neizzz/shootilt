@@ -22,9 +22,9 @@ const StyledBackground = styled.div<{ startGame: boolean }>`
   position: absolute;
   top: 0;
   left: 0;
-  transition: 400ms transform;
+  transition: 200ms transform;
   transform: translateX(
-      ${({ startGame }) => (startGame ? `${-window.innerWidth}px` : 0)}
+      ${({ startGame }) => (startGame ? `${-window.innerWidth - 50}px` : 0)}
     )
     translateZ(0);
 `;
