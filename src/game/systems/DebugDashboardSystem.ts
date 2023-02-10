@@ -1,8 +1,11 @@
 import { ISystem } from '@game/models/system';
 
 export default class DebugDashboardSystem implements ISystem {
+  private _dashboardEl: HTMLDivElement;
+
   constructor() {
-    document.body.appendChild(this._dashboardEl());
+    this._dashboardEl = this._render();
+    document.body.appendChild(this._dashboardEl);
 
     setTimeout(() => {
       const betaEl = document.querySelector('#beta') as HTMLElement;
@@ -20,7 +23,11 @@ export default class DebugDashboardSystem implements ISystem {
     fdEl.innerText = delta.toFixed(2).toString();
   }
 
-  private _dashboardEl(): HTMLElement {
+  destroy() {
+    this._dashboardEl.remove();
+  }
+
+  private _render(): HTMLDivElement {
     const dashboardEl = document.createElement('div');
     dashboardEl.innerHTML = `
       <div style="position: fixed; left: 0; top: 0;">

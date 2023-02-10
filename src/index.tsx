@@ -1,8 +1,8 @@
 import { createRoot } from 'react-dom/client';
 
 import App from '@client/App';
+import AppContextProvider from '@client/providers/AppContextProvider';
 
-// import Game from '@game';
 import './gameContext';
 import './style.css';
 
@@ -12,12 +12,11 @@ declare global {
   }
 }
 
-// document.addEventListener('DOMContentLoaded', () => {
-//   const currentGame = new Game();
-//   currentGame.start();
-// });
-
 const container = document.getElementById('shootilt-app');
 const root = createRoot(container as HTMLElement);
-root.render(<App />);
+root.render(
+  <AppContextProvider>
+    <App />
+  </AppContextProvider>
+);
 

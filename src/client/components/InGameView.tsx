@@ -1,34 +1,49 @@
 import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 
-import Game from '@game';
+import { useAppContext } from '@client/providers/AppContextProvider';
+import { useGameDispatcher } from '@client/providers/GameDispatcherProvider';
+
+import Modal from './Modal';
+import RoundEndModalContent from './RoundEndModalContent';
 
 const StyledContainer = styled.div`
   width: 100%;
   height: 100%;
-  background: orangered;
 
   position: absolute;
   top: 0;
   left: 0;
 `;
 
-type Props = {};
-
-/** 인게임 모듈(@game/*)과의 통신 포인트 */
-const InGameView = (props: Props) => {
+const InGameView = () => {
+  const [{ currentScreen }] = useAppContext();
+  const dispatch = useGameDispatcher();
   const containerRef = useRef<HTMLDivElement>(null);
-  const gameInstanceRef = useRef(new Game());
 
   useEffect(() => {
     if (!containerRef.current) {
       throw new Error('game container is not initialized.');
     }
 
-    gameInstanceRef.current.start(containerRef.current);
+    /** NOTE: 일단 진입하는 순간 게임이 시작되는 걸로 */
+    dispatch({
+      type: 'start-round',
+      payload: {
+        parentEl: containerRef.current,
+      },
+    });
   }, []);
 
-  return <StyledContainer ref={containerRef} />;
+  return (
+    <StyledContainer ref={containerRef}>
+      {currentScreen === 'game-round-end-modal' && (
+        <Modal>
+          <RoundEndModalContent />
+        </Modal>
+      )}
+    </StyledContainer>
+  );
 };
 
 export default InGameView;

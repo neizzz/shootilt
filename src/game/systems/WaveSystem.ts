@@ -6,7 +6,7 @@ import { randomPosition } from '@game/utils/in-game';
 import { now } from '@game/utils/time';
 
 // TODO: FIXME: 이건 추후에, DifficultySystem으로 수정가능하게
-const WAVE_INTERVAL = 5000;
+const WAVE_INTERVAL = 1000;
 const WAVE_AMOUNT_UNIT = 3;
 const WAVE_MAX_AMOUNT_AT_ONCE = 36;
 const TRACKER_MAX_COUNT = 150;

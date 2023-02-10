@@ -29,7 +29,7 @@ export class AbstractState implements IState {
     this._stateComponent = this._componentPools[ComponentKind.State][entity];
   }
 
-  enter(): AbstractState {
+  enter(params?: any): AbstractState {
     new Error('abstract method');
     return this;
   }

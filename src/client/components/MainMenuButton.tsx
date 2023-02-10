@@ -4,9 +4,13 @@ const StyledButtonOutline = styled.button`
   width: 14em;
   height: auto;
   border: 1px solid black;
-  border-radius: 1.2rem;
+  border-radius: 1rem;
   outline: none;
   padding: 0;
+
+  & + & {
+    margin-top: 1em;
+  }
 `;
 
 const StyledContainer = styled.div`

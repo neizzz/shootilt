@@ -1,13 +1,12 @@
-import { Dispatch, PropsWithChildren, createContext, useReducer } from 'react';
+import { PropsWithChildren } from 'react';
 import styled from 'styled-components';
 
 import InGameView from './components/InGameView';
 import MainMenu from './components/MainMenu';
-import appContextReducer, {
-  AppContextActionType,
-} from './reducers/appContextReducer';
+import { useAppContext } from './providers/AppContextProvider';
+import GameContextProvider from './providers/GameDispatcherProvider';
 
-const StyledContainer = styled.div<PropsWithChildren>`
+const StyledContainer = styled.div`
   width: 100%;
   height: 100%;
   position: relative;
@@ -15,7 +14,7 @@ const StyledContainer = styled.div<PropsWithChildren>`
   left: 0;
 `;
 
-const StyledBackground = styled.div<{ startGame: boolean }>`
+const StyledBackground = styled.div<{ inGame: boolean }>`
   width: 100%;
   height: 100%;
   background-color: olive;
@@ -24,39 +23,23 @@ const StyledBackground = styled.div<{ startGame: boolean }>`
   left: 0;
   transition: 200ms transform;
   transform: translateX(
-      ${({ startGame }) => (startGame ? `${-window.innerWidth - 50}px` : 0)}
+      ${({ inGame }) => (inGame ? `${-window.innerWidth - 50}px` : 0)}
     )
     translateZ(0);
 `;
 
-export type AppContext = {
-  startGame: boolean;
-  gameContext?: {
-    phase: 'start' | 'pause';
-    mode: 'single' | 'battle';
-  };
-  // TODO: 국제화 정보, 배틀 정보, ..
-};
-
-const initialAppContext = { startGame: false } as AppContext;
-
-export const appContext = createContext<
-  [AppContext, Dispatch<AppContextActionType>]
->([initialAppContext, (action: AppContextActionType) => {}]);
-
 const App = () => {
-  const [state, dispatch] = useReducer(appContextReducer, initialAppContext);
+  const [appContext] = useAppContext();
+  const inGame = appContext.currentScreen !== 'main';
 
   return (
-    <appContext.Provider value={[state, dispatch]}>
+    <GameContextProvider>
       <StyledContainer>
-        <>
-          {state.startGame && <InGameView />}
-          <StyledBackground startGame={state.startGame} />
-          <MainMenu />
-        </>
+        {inGame && <InGameView />}
+        <StyledBackground inGame={inGame} />
+        <MainMenu inGame={inGame} />
       </StyledContainer>
-    </appContext.Provider>
+    </GameContextProvider>
   );
 };
 
