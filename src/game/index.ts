@@ -74,6 +74,8 @@ export default class Game {
       resolution: window.devicePixelRatio,
       autoDensity: true,
     });
+    this._gameApp.ticker.minFPS = 30;
+    this._gameApp.ticker.maxFPS = 60;
 
     window.GameContext.renderer = this._gameApp.renderer;
 
@@ -140,7 +142,7 @@ export default class Game {
         this._componentPools[ComponentKind.Collide],
         this._componentPools[ComponentKind.Position]
       ),
-      new DebugDashboardSystem(),
+      new DebugDashboardSystem(this._gameApp),
       new RenderSystem(
         this._componentPools[ComponentKind.Position],
         this._componentPools[ComponentKind.State]
@@ -167,8 +169,6 @@ export default class Game {
   }
 
   restartRound() {
-    // this._stage && this._gameApp.stage.removeChild(this._stage);
-    // this._systems.forEach((system) => system.destroy?.());
     this.destroy();
 
     this.init();

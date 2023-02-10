@@ -13,7 +13,7 @@ import { TrackerTrackingState } from '@game/states/tracker';
 
 import { CollideComponent } from './../models/component';
 
-const TRACKING_SPEED = 6;
+const TRACKING_SPEED = 2;
 const EPSILON = 0.1;
 
 export default class TrackSystem implements ISystem {

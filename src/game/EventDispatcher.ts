@@ -27,10 +27,10 @@ export default class EventDispatcher {
 
   dispatch(event: GameEvent, entity: Entity) {
     if (event === GameEvent.Dead) {
-      this._entityManager.removeEntity(entity);
-
       if (entity === this._entityManager.getPlayerEntity()) {
         this._game.endRound();
+      } else {
+        this._entityManager.removeEntity(entity);
       }
     }
 
