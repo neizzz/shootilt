@@ -22,14 +22,15 @@ export class BulletShootingState extends AbstractState {
     return this;
   }
 
-  handleEvent(event: Event | CustomEvent) {
-    switch (event.type) {
-      case GameEvent.OutsideStage: {
-        this.destroy();
-        this._stateComponent.state = undefined;
-        break;
-      }
-    }
-  }
+  // handleEvent(event: Event | CustomEvent) {
+  //   switch (event.type) {
+  //     case GameEvent.OutsideStage: {
+  //       this.destroy();
+  //       this._stateComponent.state = undefined;
+  //       (event as CustomEvent).detail.removeEntity(this._entity);
+  //       break;
+  //     }
+  //   }
+  // }
 }
 

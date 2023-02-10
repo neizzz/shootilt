@@ -1,14 +1,6 @@
 import EntityManager from '@game/EntityManager';
 import EventDispatcher from '@game/EventDispatcher';
-import gsap from 'gsap';
-import {
-  Application,
-  Container,
-  ENV,
-  Graphics,
-  Texture,
-  settings,
-} from 'pixi.js';
+import { Application, Container, Graphics, Texture } from 'pixi.js';
 
 import {
   CollideComponent,
@@ -40,8 +32,6 @@ import { now } from '@game/utils/time';
 
 import DebugDashboardSystem from './systems/DebugDashboardSystem';
 
-settings.PREFER_ENV = ENV.WEBGL2;
-
 export const GameContext = window.GameContext;
 
 type GameInitOptions = {
@@ -62,7 +52,6 @@ export default class Game {
   } = { start: NaN };
 
   private _componentPools!: ComponentPools;
-  private _gsapTickerCallback!: () => void;
   private _onEndRound!: () => void;
 
   constructor({ onEndRound }: GameInitOptions) {
@@ -73,13 +62,23 @@ export default class Game {
       backgroundColor: 0x000000,
       resolution: window.devicePixelRatio,
       autoDensity: true,
+      antialias: true,
+      powerPreference: 'high-performance',
+      autoStart: false,
     });
-    this._gameApp.ticker.minFPS = 30;
-    this._gameApp.ticker.maxFPS = 60;
+
+    this._stage = new Container();
+    this._stage.sortableChildren = true;
+    this._stage.interactive = true;
+    this._stage.hitArea = this._gameApp.screen;
+    this._gameApp.stage.addChild(this._stage);
 
     window.GameContext.renderer = this._gameApp.renderer;
 
     this._initTextureMaps();
+    this._gameApp.ticker.add((delta) => {
+      this._systems.forEach((system) => system.update(delta)); // convert to second
+    });
   }
 
   init() {
@@ -91,12 +90,6 @@ export default class Game {
       this._entityManager,
       this._componentPools[ComponentKind.State]
     );
-
-    this._stage = new Container();
-    this._stage.sortableChildren = true;
-    this._stage.interactive = true;
-    this._stage.hitArea = this._gameApp.screen;
-    this._gameApp.stage.addChild(this._stage);
   }
 
   appendViewTo(parentEl: HTMLDivElement) {
@@ -170,7 +163,6 @@ export default class Game {
 
   restartRound() {
     this.destroy();
-
     this.init();
     this.startRound();
   }
@@ -181,10 +173,8 @@ export default class Game {
   }
 
   destroy() {
-    this._stage && this._gameApp.stage.removeChild(this._stage);
+    this._stage?.removeChildren();
     this._systems.forEach((system) => system.destroy?.());
-
-    this._stage = undefined;
     this._systems = [];
   }
 
@@ -211,21 +201,11 @@ export default class Game {
   }
 
   private _startGameLoop() {
-    if (this._gameApp.ticker.count === 1) {
-      this._gameApp.ticker
-        .add((delta) => {
-          this._systems.forEach((system) => system.update(delta)); // convert to second
-        })
-        .stop();
-    }
-    this._gsapTickerCallback = () => {
-      this._gameApp.ticker.update();
-    };
-    gsap.ticker.add(this._gsapTickerCallback);
+    this._gameApp.ticker.start();
   }
 
   private _stopGameLoop() {
-    gsap.ticker.remove(this._gsapTickerCallback);
+    this._gameApp.ticker.stop();
   }
 
   private _initTextureMaps() {
@@ -244,9 +224,14 @@ export default class Game {
           currentGraphics.cacheAsBitmap = true;
           return generateTexture(currentGraphics);
         }),
-        Shadow: generateTexture(
-          new Graphics().beginFill(0xfcffe7).drawCircle(0, 0, 8).endFill()
-        ),
+        Shadow: (() => {
+          const graphics = new Graphics()
+            .beginFill(0xfcffe7)
+            .drawCircle(0, 0, 8)
+            .endFill();
+          graphics.cacheAsBitmap = true;
+          return generateTexture(graphics);
+        })(),
       },
       [EntityKind.Bullet]: {
         // BasicBody: Texture.from(`${__ASSET_DIR__}/basic-bullet.png`),

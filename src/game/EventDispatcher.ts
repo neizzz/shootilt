@@ -26,6 +26,8 @@ export default class EventDispatcher {
   }
 
   dispatch(event: GameEvent, entity: Entity) {
+    console.debug(`[EVENT: ${event}, ENTITY: ${entity}]`);
+
     if (event === GameEvent.Dead) {
       if (entity === this._entityManager.getPlayerEntity()) {
         this._game.endRound();
@@ -34,10 +36,9 @@ export default class EventDispatcher {
       }
     }
 
-    console.info(`[EVENT: ${event}, ENTITY: ${entity}]`);
-
+    const e = new CustomEvent(event);
     const stateComponent = this._stateComponents[entity];
-    stateComponent.state?.handleEvent(new CustomEvent(event));
+    stateComponent.state?.handleEvent(e);
   }
 }
 
