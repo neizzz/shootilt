@@ -26,13 +26,14 @@ export default class TrailEffectSystem implements ISystem {
       x: targetPositionComponent.x,
       y: targetPositionComponent.y,
     };
-    trailTexture;
     for (let i = 0; i < HISTORY_SIZE; i++) {
-      this._historyX.push(0);
-      this._historyY.push(0);
+      this._historyX.push(this._prevTargetPosition.x);
+      this._historyY.push(this._prevTargetPosition.y);
     }
     for (let i = 0; i < ROPE_SIZE; i++) {
-      this._trailPoints.push(new PixiPoint(0, 0));
+      this._trailPoints.push(
+        new PixiPoint(this._prevTargetPosition.x, this._prevTargetPosition.y)
+      );
     }
     this._rope = new SimpleRope(trailTexture, this._trailPoints);
     this._rope.blendMode = BLEND_MODES.ADD;
@@ -58,6 +59,10 @@ export default class TrailEffectSystem implements ISystem {
       x: this._targetPositionComponent.x,
       y: this._targetPositionComponent.y,
     };
+  }
+
+  destroy() {
+    this._rope.destroy();
   }
 
   private _drawTrail(point: PixiPoint) {

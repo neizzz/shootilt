@@ -17,6 +17,7 @@ import HashSet from './utils/container/HashSet';
 
 export default class EntityManager {
   private _game: Game;
+  private _playerEntity!: Entity;
   private _idleEntityQueue = new CircularQueue<Entity>(
     GameContext.MAX_ENTITY_COUNT + 1
   );
@@ -28,6 +29,14 @@ export default class EntityManager {
     increasingKeys(GameContext.MAX_ENTITY_COUNT).forEach((num) =>
       this._idleEntityQueue.push(num as Entity)
     );
+  }
+
+  setPlayerEntity(playerEntity: Entity): void {
+    this._playerEntity = playerEntity;
+  }
+
+  getPlayerEntity(): Entity {
+    return this._playerEntity;
   }
 
   /** FIXME: 대전에서는 enemy === tracker가 아님 */
@@ -63,6 +72,16 @@ export default class EntityManager {
           this._game.getGameStage(),
           this._game.getTextureMap(EntityKind.Avoider)
         ).enter();
+
+        const { width } = stateComponent.sprites[0].getBounds();
+        const collideComponent =
+          componentPools[ComponentKind.Collide][newEntity];
+        collideComponent.inUse = true;
+        collideComponent.distFromCenter = {
+          x: 0,
+          y: 0,
+        };
+        collideComponent.radius = width / 2;
         break;
       }
 
@@ -88,7 +107,6 @@ export default class EntityManager {
           this._game.getGameStage(),
           this._game.getTextureMap(EntityKind.Tracker)
         ).enter();
-
         break;
       }
 

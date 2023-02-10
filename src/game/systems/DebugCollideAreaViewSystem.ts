@@ -44,6 +44,12 @@ export default class DebugCollideAreaViewSystem implements ISystem {
     }
   }
 
+  destroy() {
+    this._debugSprites.forEach((sprite) => {
+      sprite?.destroy();
+    });
+  }
+
   private _checkInUse(entity: number) {
     const collide = this._collideComponents[entity];
 
