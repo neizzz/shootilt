@@ -16,11 +16,7 @@ export default class TrailEffectSystem implements ISystem {
   private _trailPoints = [] as PixiPoint[];
   private _rope: SimpleRope;
 
-  constructor(
-    targetPositionComponent: PositionComponent,
-    stage: Container,
-    trailTexture: Texture
-  ) {
+  constructor(targetPositionComponent: PositionComponent, stage: Container) {
     this._targetPositionComponent = targetPositionComponent;
     this._prevTargetPosition = {
       x: targetPositionComponent.x,
@@ -35,7 +31,10 @@ export default class TrailEffectSystem implements ISystem {
         new PixiPoint(this._prevTargetPosition.x, this._prevTargetPosition.y)
       );
     }
-    this._rope = new SimpleRope(trailTexture, this._trailPoints);
+    this._rope = new SimpleRope(
+      this._createTrailTexture('white'),
+      this._trailPoints
+    );
     this._rope.blendMode = BLEND_MODES.ADD;
     stage.addChildAt(this._rope, 0);
   }
@@ -127,6 +126,28 @@ export default class TrailEffectSystem implements ISystem {
       (-2 * t3 + 3 * t2) * p[1] +
       (t3 - t2) * m[1]
     );
+  }
+
+  private _createTrailTexture(color: string, tickness?: number): Texture {
+    const TRAIL_LENGTH = 128;
+    const TRAIL_TICKNESS = tickness ?? 14;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = TRAIL_LENGTH;
+    canvas.height = TRAIL_TICKNESS;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      throw new Error('canvas is not supported.');
+    }
+
+    const gradient = ctx.createLinearGradient(0, 0, TRAIL_LENGTH, 0);
+    gradient.addColorStop(0, color);
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, TRAIL_LENGTH, TRAIL_TICKNESS);
+
+    return Texture.from(canvas);
   }
 }
 
