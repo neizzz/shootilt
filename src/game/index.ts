@@ -142,8 +142,7 @@ export default class Game {
       ),
       new TrailEffectSystem(
         this._componentPools[ComponentKind.Position][playerEntity],
-        this._gameApp.stage,
-        Texture.from(`${__ASSET_DIR__}/trail.png`)
+        this._gameApp.stage
       ),
       new ShootingSystem(
         this.getGameStage(),
