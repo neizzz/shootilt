@@ -14,7 +14,9 @@ export default defineConfig(({ mode }) => {
       minify: isProduction ? true : false,
     },
     define: {
-      __ASSET_DIR__: '"/assets/images"',
+      __IMAGE_ASSET_DIR__: '"/assets/images"',
+      __FONT_ASSET_DIR__: '"/assets/fonts"',
+      __SCORE_FONT_NAME__: '"Gamer"',
     },
     plugins: [react(), tsconfigPaths(), basicSsl()],
   };

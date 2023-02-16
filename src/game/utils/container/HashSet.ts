@@ -1,3 +1,4 @@
+/** TODO: 현재는 string|number|symbol만 아이템으로 가능 */
 export default class HashSet<T extends string | number | symbol> {
   private _dirtyFlag = false;
   private _cachedKeysRef = {

@@ -1,4 +1,4 @@
-import EventDispatcher from '@game/EventDispatcher';
+import EventBus from '@game/EventBus';
 
 import { GameContext } from '@game';
 
@@ -10,16 +10,16 @@ import { ISystem } from '@game/models/system';
 import { isOutsideStage } from '@game/utils/in-game';
 
 export default class MoveSystem implements ISystem {
-  private _eventDispatcher: EventDispatcher;
+  private _eventBus: EventBus;
   private _positionComponents: PositionComponent[];
   private _velocityComponents: VelocityComponent[];
 
   constructor(
-    eventDispatcher: EventDispatcher,
+    eventDispatcher: EventBus,
     positionComponents: PositionComponent[],
     velocityComponents: VelocityComponent[]
   ) {
-    this._eventDispatcher = eventDispatcher;
+    this._eventBus = eventDispatcher;
     this._positionComponents = positionComponents;
     this._velocityComponents = velocityComponents;
   }
@@ -39,7 +39,7 @@ export default class MoveSystem implements ISystem {
       position.y = position.y + velocity.vy * delta;
 
       if (position.removeIfOutside && isOutsideStage(position.x, position.y)) {
-        this._eventDispatcher.dispatch(GameEvent.Dead, entity);
+        this._eventBus.dispatchToEntity(GameEvent.Dead, entity);
       }
     }
   }

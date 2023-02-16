@@ -6,8 +6,6 @@ export default class DebugDashboardSystem implements ISystem {
   private _gameApp: Application;
   private _dashboardEl: HTMLDivElement;
   private _onDeviceOrientation: EventListener;
-
-  private _fdEl: HTMLSpanElement;
   private _fpsEl: HTMLSpanElement;
 
   constructor(gameApp: Application) {
@@ -30,13 +28,11 @@ export default class DebugDashboardSystem implements ISystem {
       window.addEventListener('deviceorientation', this._onDeviceOrientation);
     });
 
-    this._fdEl = document.querySelector('#fd') as HTMLElement;
     this._fpsEl = document.querySelector('#fps') as HTMLElement;
   }
 
   update(delta: number) {
-    this._fdEl.innerText = delta.toFixed(2).toString();
-    this._fpsEl.innerText = this._gameApp.ticker.FPS.toString();
+    this._fpsEl.innerText = this._gameApp.ticker.FPS.toFixed(0);
   }
 
   destroy() {
@@ -51,7 +47,6 @@ export default class DebugDashboardSystem implements ISystem {
         <div><span>beta(x):</span><span id="beta"/></div>
         <div><span>gamm(y):</span><span id="gamma"/></div>
         <div><span>fps:</span><span id="fps"/></div>
-        <div><span>frame delta(ms):</span><span id="fd"/></div>
       </div>
     `;
 

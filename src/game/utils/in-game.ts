@@ -55,7 +55,6 @@ export const headCircleCenter = (
   const centerDist = height / 2 - width / 2;
 
   return {
-    // x: centerDist * Math.cos(Math.PI / 2 - rotation),
     x: centerDist * Math.sin(rotation),
     y: -centerDist * Math.cos(rotation),
   };

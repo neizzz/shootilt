@@ -130,7 +130,7 @@ export default class TrailEffectSystem implements ISystem {
 
   private _createTrailTexture(color: string, tickness?: number): Texture {
     const TRAIL_LENGTH = 128;
-    const TRAIL_TICKNESS = tickness ?? 14;
+    const TRAIL_TICKNESS = tickness ?? 12;
 
     const canvas = document.createElement('canvas');
     canvas.width = TRAIL_LENGTH;

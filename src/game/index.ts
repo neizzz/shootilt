@@ -1,6 +1,13 @@
 import EntityManager from '@game/EntityManager';
-import EventDispatcher from '@game/EventDispatcher';
-import { Application, Container, Graphics, Texture } from 'pixi.js';
+import EventBus from '@game/EventBus';
+import {
+  Application,
+  Container,
+  Graphics,
+  Loader,
+  LoaderResource,
+  Texture,
+} from 'pixi.js';
 
 import {
   CollideComponent,
@@ -31,6 +38,7 @@ import { generateTexture } from '@game/utils/in-game';
 import { now } from '@game/utils/time';
 
 import DebugDashboardSystem from './systems/DebugDashboardSystem';
+import ScoreSystem from './systems/ScoreSystem';
 
 export const GameContext = window.GameContext;
 
@@ -44,9 +52,10 @@ export default class Game {
   private _textureMaps!: Partial<
     Record<EntityKind, Record<string, Texture | Texture[]>>
   >;
-  private _eventDispatcher!: EventDispatcher;
+  private _eventBus!: EventBus;
   private _entityManager!: EntityManager;
   private _systems: ISystem[] = [];
+  private _nonUpdateSystems: ISystem[] = [];
   private _timeInfo: {
     start: number;
   } = { start: NaN };
@@ -73,9 +82,12 @@ export default class Game {
     this._stage.hitArea = this._gameApp.screen;
     this._gameApp.stage.addChild(this._stage);
 
+    this._gameApp.ticker.minFPS = 60;
+    this._gameApp.ticker.maxFPS = 60;
     window.GameContext.renderer = this._gameApp.renderer;
 
     this._initTextureMaps();
+
     this._gameApp.ticker.add((delta) => {
       this._systems.forEach((system) => system.update(delta)); // convert to second
     });
@@ -85,7 +97,7 @@ export default class Game {
     this._initComponents();
 
     this._entityManager = new EntityManager(this);
-    this._eventDispatcher = new EventDispatcher(
+    this._eventBus = new EventBus(
       this,
       this._entityManager,
       this._componentPools[ComponentKind.State]
@@ -121,12 +133,12 @@ export default class Game {
         this._componentPools[ComponentKind.Collide]
       ),
       new MoveSystem(
-        this._eventDispatcher,
+        this._eventBus,
         this._componentPools[ComponentKind.Position],
         this._componentPools[ComponentKind.Velocity]
       ),
       new CollideSystem(
-        this._eventDispatcher,
+        this._eventBus,
         this._componentPools[ComponentKind.Collide],
         this._componentPools[ComponentKind.Position]
       ),
@@ -153,9 +165,12 @@ export default class Game {
       )
     );
 
-    new VelocityInputSystem(
-      this._componentPools[ComponentKind.Velocity][playerEntity]
-    );
+    this._nonUpdateSystems = [
+      new VelocityInputSystem(
+        this._componentPools[ComponentKind.Velocity][playerEntity]
+      ),
+      new ScoreSystem(this._stage!, this._eventBus),
+    ];
 
     this._startGameLoop();
   }
@@ -175,6 +190,8 @@ export default class Game {
     this._stage?.removeChildren();
     this._systems.forEach((system) => system.destroy?.());
     this._systems = [];
+    this._nonUpdateSystems.forEach((system) => system.destroy?.());
+    this._nonUpdateSystems = [];
   }
 
   getStartTime(): number {
@@ -233,10 +250,9 @@ export default class Game {
         })(),
       },
       [EntityKind.Bullet]: {
-        // BasicBody: Texture.from(`${__ASSET_DIR__}/basic-bullet.png`),
-        BasicBody: Texture.from(`${__ASSET_DIR__}/fire-bullet.png`),
-        FireBody: Texture.from(`${__ASSET_DIR__}/fire-bullet.png`),
-        IceBody: Texture.from(`${__ASSET_DIR__}/ice-bullet.png`),
+        BasicBody: Texture.from(`${__IMAGE_ASSET_DIR__}/fire-bullet.png`),
+        FireBody: Texture.from(`${__IMAGE_ASSET_DIR__}/fire-bullet.png`),
+        IceBody: Texture.from(`${__IMAGE_ASSET_DIR__}/ice-bullet.png`),
       },
     };
   }

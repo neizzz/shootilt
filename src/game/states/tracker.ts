@@ -4,6 +4,11 @@ import { GameEvent } from '@game/models/event';
 
 import { AbstractState, InvalidEventTypeError } from './common';
 
+export enum TrackerStateValue {
+  Spawning = 'tracker-state/spawning',
+  Tracking = 'tracker-state/tracking',
+}
+
 export class TrackerSpawningState extends AbstractState {
   enter(): TrackerSpawningState {
     const spawningSprite = new AnimatedSprite(
@@ -36,6 +41,10 @@ export class TrackerSpawningState extends AbstractState {
         throw new InvalidEventTypeError();
     }
   }
+
+  valueOf() {
+    return TrackerStateValue.Spawning;
+  }
 }
 
 export class TrackerTrackingState extends AbstractState {
@@ -57,5 +66,9 @@ export class TrackerTrackingState extends AbstractState {
   //       throw new InvalidEventTypeError();
   //   }
   // }
+
+  valueOf() {
+    return TrackerStateValue.Tracking;
+  }
 }
 
