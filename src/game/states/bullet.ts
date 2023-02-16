@@ -1,7 +1,10 @@
 import { Sprite, Texture } from 'pixi.js';
 
-import { GameEvent } from './../models/event';
 import { AbstractState } from './common';
+
+export enum BulletStateValue {
+  Shooting = 'bullet-state/shooting',
+}
 
 export class BulletShootingState extends AbstractState {
   private _feature: 'Basic' | 'Fire' | 'Ice' = 'Basic';
@@ -32,5 +35,9 @@ export class BulletShootingState extends AbstractState {
   //     }
   //   }
   // }
+
+  valueOf() {
+    return BulletStateValue.Shooting;
+  }
 }
 

@@ -1,4 +1,4 @@
-import EventDispatcher from '@game/EventDispatcher';
+import EventBus from '@game/EventBus';
 
 import { GameContext } from '@game';
 
@@ -9,16 +9,16 @@ import { ISystem } from '@game/models/system';
 import { distance } from '@game/utils/in-game';
 
 export default class CollideSystem implements ISystem {
-  private _eventDispatcher: EventDispatcher;
+  private _eventBus: EventBus;
   private _collideComponents: CollideComponent[];
   private _positionComponents: PositionComponent[];
 
   constructor(
-    eventDispatcher: EventDispatcher,
+    eventDispatcher: EventBus,
     collideComponents: CollideComponent[],
     positionComponents: PositionComponent[]
   ) {
-    this._eventDispatcher = eventDispatcher;
+    this._eventBus = eventDispatcher;
     this._collideComponents = collideComponents;
     this._positionComponents = positionComponents;
   }
@@ -51,7 +51,7 @@ export default class CollideSystem implements ISystem {
         );
 
         if (dist < collide.radius + targetCollide.radius) {
-          this._eventDispatcher.dispatch(collide.eventToTarget!, targetEntity);
+          this._eventBus.dispatchToEntity(collide.eventToTarget!, targetEntity);
         }
       });
     }

@@ -45,9 +45,9 @@ export default class VelocityInputSystem implements ISystem {
     beta: number;
     gamma: number;
   }): Omit<VelocityComponent, keyof IComponent> {
-    const MAX_ANGLE_VALUE = 45;
-    const MIN_ANGLE_VALUE = -45;
-    const MAX_VELOCITY = 4; // pixel per frame
+    const MAX_ANGLE_VALUE = 30;
+    const MIN_ANGLE_VALUE = -30;
+    const MAX_VELOCITY = 5; // pixel per frame
 
     let { beta, gamma } = params;
 
