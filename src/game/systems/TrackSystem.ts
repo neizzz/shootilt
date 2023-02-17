@@ -54,7 +54,8 @@ export default class TrackSystem implements ISystem {
 
       const vectorX = targetPosition.x - position.x;
       const vectorY = targetPosition.y - position.y;
-      const originSpeed = Math.sqrt(vectorX * vectorX + vectorY * vectorY);
+      const originSpeed =
+        delta * Math.sqrt(vectorX * vectorX + vectorY * vectorY);
       const coef =
         originSpeed < epsilon ? 0 : (delta * trackingSpeed) / originSpeed;
 

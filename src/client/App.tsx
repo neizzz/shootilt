@@ -1,4 +1,3 @@
-import { PropsWithChildren } from 'react';
 import styled from 'styled-components';
 
 import InGameView from './components/InGameView';
@@ -35,7 +34,7 @@ const App = () => {
   return (
     <GameContextProvider>
       <StyledContainer>
-        {inGame && <InGameView />}
+        <InGameView />
         <StyledBackground inGame={inGame} />
         <MainMenu inGame={inGame} />
       </StyledContainer>

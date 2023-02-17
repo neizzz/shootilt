@@ -7,6 +7,7 @@ import {
   useEffect,
   useRef,
 } from 'react';
+import { createGlobalStyle } from 'styled-components';
 
 import Game from '@game';
 

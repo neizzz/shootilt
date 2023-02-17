@@ -22,18 +22,21 @@ const InGameView = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (currentScreen !== 'game') {
+      return;
+    }
+
     if (!containerRef.current) {
       throw new Error('game container is not initialized.');
     }
 
-    /** NOTE: 일단 진입하는 순간 게임이 시작되는 걸로 */
     dispatch({
       type: 'start-round',
       payload: {
         parentEl: containerRef.current,
       },
     });
-  }, []);
+  }, [currentScreen]);
 
   return (
     <StyledContainer ref={containerRef}>
