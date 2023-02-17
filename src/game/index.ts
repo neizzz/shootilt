@@ -82,7 +82,11 @@ export default class Game {
     this._stage.hitArea = this._gameApp.screen;
     this._gameApp.stage.addChild(this._stage);
 
-    this._gameApp.ticker.minFPS = 60;
+    /** NOTE:
+     * ticker fps세팅을 건들었을때
+     * 모바일에선 안정적으로 FPS가 유지되는데,
+     * PC(m1 pro기준)에서는 FPS변동이 심해짐 */
+    this._gameApp.ticker.minFPS = 30;
     this._gameApp.ticker.maxFPS = 60;
     window.GameContext.renderer = this._gameApp.renderer;
 
