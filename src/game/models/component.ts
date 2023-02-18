@@ -39,7 +39,7 @@ export interface IComponent {
 export type PositionComponent = IComponent & {
   x: number;
   y: number;
-  removeIfOutside: boolean;
+  outsideStageBehavior: 'none' | 'remove' | 'block';
 };
 
 export type VelocityComponent = IComponent & {

@@ -9,6 +9,8 @@ import { ISystem } from '@game/models/system';
 
 import { isOutsideStage } from '@game/utils/in-game';
 
+import { clampIntoStage } from './../utils/in-game';
+
 export default class MoveSystem implements ISystem {
   private _eventBus: EventBus;
   private _positionComponents: PositionComponent[];
@@ -35,12 +37,25 @@ export default class MoveSystem implements ISystem {
       const position = this._positionComponents[entity];
       const velocity = this._velocityComponents[entity];
 
-      position.x = position.x + velocity.vx * delta;
-      position.y = position.y + velocity.vy * delta;
+      let [newX, newY] = [
+        position.x + velocity.vx * delta,
+        position.y + velocity.vy * delta,
+      ];
 
-      if (position.removeIfOutside && isOutsideStage(position.x, position.y)) {
-        this._eventBus.dispatchToEntity(GameEvent.Dead, entity);
+      if (isOutsideStage(newX, newY)) {
+        switch (position.outsideStageBehavior) {
+          case 'block':
+            const clampedPosition = clampIntoStage(newX, newY);
+            [newX, newY] = [clampedPosition.x, clampedPosition.y];
+            break;
+
+          case 'remove':
+            this._eventBus.dispatchToEntity(GameEvent.Dead, entity);
+            break;
+        }
       }
+
+      [position.x, position.y] = [newX, newY];
     }
   }
 

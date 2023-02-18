@@ -56,7 +56,7 @@ export default class EntityManager {
         positionComponent.inUse = true;
         positionComponent.x = GameContext.VIEW_WIDTH / 2;
         positionComponent.y = GameContext.VIEW_HEIGHT / 2;
-        positionComponent.removeIfOutside = false;
+        positionComponent.outsideStageBehavior = 'block';
 
         const velocityComponent =
           componentPools[ComponentKind.Velocity][newEntity];
@@ -91,7 +91,7 @@ export default class EntityManager {
         positionComponent.inUse = true;
         positionComponent.x = initComponents![ComponentKind.Position]!.x!;
         positionComponent.y = initComponents![ComponentKind.Position]!.y!;
-        positionComponent.removeIfOutside = false;
+        positionComponent.outsideStageBehavior = 'none';
 
         const velocityComponent =
           componentPools[ComponentKind.Velocity][newEntity];
@@ -116,7 +116,7 @@ export default class EntityManager {
         positionComponent.inUse = true;
         positionComponent.x = initComponents![ComponentKind.Position]!.x!;
         positionComponent.y = initComponents![ComponentKind.Position]!.y!;
-        positionComponent.removeIfOutside = true;
+        positionComponent.outsideStageBehavior = 'remove';
 
         const velocityComponent =
           componentPools[ComponentKind.Velocity][newEntity];

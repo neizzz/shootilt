@@ -98,7 +98,7 @@ export default class Game {
   }
 
   init() {
-    this._initComponents();
+    this._initComponentsPool();
 
     this._entityManager = new EntityManager(this);
     this._eventBus = new EventBus(
@@ -261,7 +261,7 @@ export default class Game {
     };
   }
 
-  private _initComponents() {
+  private _initComponentsPool() {
     this._componentPools = {
       [ComponentKind.Velocity]: SealedArray.from<VelocityComponent>(
         { length: GameContext.MAX_ENTITY_COUNT },
@@ -277,7 +277,7 @@ export default class Game {
           inUse: false,
           x: NaN,
           y: NaN,
-          removeIfOutside: false,
+          outsideStageBehavior: 'none',
         })
       ),
       [ComponentKind.State]: SealedArray.from<StateComponent>(
