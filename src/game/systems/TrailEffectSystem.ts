@@ -1,4 +1,3 @@
-import gsap from 'gsap';
 import { BLEND_MODES, Container, SimpleRope, Texture } from 'pixi.js';
 import { Point as PixiPoint } from 'pixi.js';
 
@@ -40,31 +39,20 @@ export default class TrailEffectSystem implements ISystem {
   }
 
   update() {
-    const duration = 5;
     const { x, y } = this._targetPositionComponent;
-    gsap.to(
-      {
-        ...this._prevTargetPosition,
-      },
-      {
-        x,
-        y,
-        duration,
-        onUpdateParams: [new PixiPoint(x, y)],
-        onUpdate: this._drawTrail.bind(this),
-      }
-    );
     this._prevTargetPosition = {
       x: this._targetPositionComponent.x,
       y: this._targetPositionComponent.y,
     };
+
+    this._drawTrail({ x, y });
   }
 
   destroy() {
     this._rope.destroy();
   }
 
-  private _drawTrail(point: PixiPoint) {
+  private _drawTrail(point: SimplePoint) {
     this._historyX.pop();
     this._historyX.unshift(point.x);
     this._historyY.pop();
