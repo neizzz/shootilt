@@ -69,7 +69,7 @@ export default class EntityManager {
         stateComponent.state = new AvoiderControlledState(
           newEntity,
           componentPools,
-          this._game.getGameStage(),
+          this._game.getStage(),
           this._game.getTextureMap(EntityKind.Avoider)
         ).enter();
 
@@ -102,9 +102,10 @@ export default class EntityManager {
         const stateComponent = componentPools[ComponentKind.State][newEntity];
         stateComponent.inUse = true;
         stateComponent.state = new TrackerSpawningState(
+          this._game.getShadowStage(),
           newEntity,
           this._game.getComponentPools(),
-          this._game.getGameStage(),
+          this._game.getStage(),
           this._game.getTextureMap(EntityKind.Tracker)
         ).enter();
         break;
@@ -131,7 +132,7 @@ export default class EntityManager {
         stateComponent.state = new BulletShootingState(
           newEntity,
           this._game.getComponentPools(),
-          this._game.getGameStage(),
+          this._game.getStage(),
           this._game.getTextureMap(EntityKind.Bullet)
         ).enter();
 
