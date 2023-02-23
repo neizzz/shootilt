@@ -78,9 +78,11 @@ export default class Game {
       autoStart: false,
     });
 
+    this._shadowStage = new Container();
     this._particleContainer = new ParticleContainer();
     this._stage = new Container();
-    this._shadowStage = new Container();
+    this._stage.interactive = true;
+    this._stage.hitArea = this._gameApp.screen;
     this._gameApp.stage.addChild(
       this._shadowStage,
       this._particleContainer,
