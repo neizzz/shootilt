@@ -4,8 +4,7 @@ import {
   Application,
   Container,
   Graphics,
-  Loader,
-  LoaderResource,
+  ParticleContainer,
   Texture,
 } from 'pixi.js';
 
@@ -38,6 +37,7 @@ import { generateTexture } from '@game/utils/in-game';
 import { now } from '@game/utils/time';
 
 import DebugDashboardSystem from './systems/DebugDashboardSystem';
+import DebugVelocityInputSystem from './systems/DebugVelocityInputSystem';
 import ScoreSystem from './systems/ScoreSystem';
 
 export const GameContext = window.GameContext;
@@ -47,8 +47,10 @@ type GameInitOptions = {
 };
 
 export default class Game {
-  private _gameApp!: Application;
-  private _stage?: Container;
+  private _gameApp: Application;
+  private _stage: Container;
+  private _shadowStage: Container;
+  private _particleContainer: ParticleContainer;
   private _textureMaps!: Partial<
     Record<EntityKind, Record<string, Texture | Texture[]>>
   >;
@@ -71,18 +73,23 @@ export default class Game {
       backgroundColor: 0x000000,
       resolution: window.devicePixelRatio,
       autoDensity: true,
-      antialias: true,
+      antialias: false,
       powerPreference: 'high-performance',
       autoStart: false,
     });
 
+    this._shadowStage = new Container();
+    this._particleContainer = new ParticleContainer();
     this._stage = new Container();
-    this._stage.sortableChildren = true;
     this._stage.interactive = true;
     this._stage.hitArea = this._gameApp.screen;
-    this._gameApp.stage.addChild(this._stage);
+    this._gameApp.stage.addChild(
+      this._shadowStage,
+      this._particleContainer,
+      this._stage
+    );
 
-    /** NOTE:
+    /** NOTE: (#35)
      * ticker fps세팅을 건들었을때
      * 모바일에선 안정적으로 FPS가 유지되는데,
      * PC(m1 pro기준)에서는 FPS변동이 심해짐 */
@@ -98,7 +105,7 @@ export default class Game {
   }
 
   init() {
-    this._initComponents();
+    this._initComponentsPool();
 
     this._entityManager = new EntityManager(this);
     this._eventBus = new EventBus(
@@ -147,7 +154,7 @@ export default class Game {
         this._componentPools[ComponentKind.Position]
       ),
       new DebugCollideAreaViewSystem(
-        this.getGameStage(),
+        this.getStage(),
         this._componentPools[ComponentKind.Collide],
         this._componentPools[ComponentKind.Position]
       ),
@@ -158,10 +165,11 @@ export default class Game {
       ),
       new TrailEffectSystem(
         this._componentPools[ComponentKind.Position][playerEntity],
-        this._gameApp.stage
+        this._textureMaps[EntityKind.Avoider]!.Body as Texture,
+        this._particleContainer
       ),
       new ShootingSystem(
-        this.getGameStage(),
+        this.getStage(),
         this._componentPools[ComponentKind.Position][playerEntity],
         (initComponents: PartialComponents) => {
           this._entityManager.createEntity(EntityKind.Bullet, initComponents);
@@ -170,6 +178,9 @@ export default class Game {
     );
 
     this._nonUpdateSystems = [
+      new DebugVelocityInputSystem(
+        this._componentPools[ComponentKind.Velocity][playerEntity]
+      ),
       new VelocityInputSystem(
         this._componentPools[ComponentKind.Velocity][playerEntity]
       ),
@@ -206,8 +217,12 @@ export default class Game {
     return this._componentPools;
   }
 
-  getGameStage(): Container {
-    return this._stage as Container;
+  getStage(): Container {
+    return this._stage;
+  }
+
+  getShadowStage(): Container {
+    return this._shadowStage;
   }
 
   getTextureMap(kind: EntityKind): Record<string, Texture | Texture[]> {
@@ -236,10 +251,10 @@ export default class Game {
         ),
       },
       [EntityKind.Tracker]: {
-        SpawningBody: increasingKeys(40).map((num) => {
+        SpawningBody: increasingKeys(60).map((num) => {
           const currentGraphics = new Graphics();
           currentGraphics.beginFill(0xeb455f);
-          currentGraphics.drawCircle(0, 0, 0.15 * num);
+          currentGraphics.drawCircle(0, 0, 0.1 * num);
           currentGraphics.endFill();
           currentGraphics.cacheAsBitmap = true;
           return generateTexture(currentGraphics);
@@ -261,7 +276,7 @@ export default class Game {
     };
   }
 
-  private _initComponents() {
+  private _initComponentsPool() {
     this._componentPools = {
       [ComponentKind.Velocity]: SealedArray.from<VelocityComponent>(
         { length: GameContext.MAX_ENTITY_COUNT },
@@ -277,7 +292,7 @@ export default class Game {
           inUse: false,
           x: NaN,
           y: NaN,
-          removeIfOutside: false,
+          outsideStageBehavior: 'none',
         })
       ),
       [ComponentKind.State]: SealedArray.from<StateComponent>(

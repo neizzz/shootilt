@@ -56,7 +56,7 @@ export default class EntityManager {
         positionComponent.inUse = true;
         positionComponent.x = GameContext.VIEW_WIDTH / 2;
         positionComponent.y = GameContext.VIEW_HEIGHT / 2;
-        positionComponent.removeIfOutside = false;
+        positionComponent.outsideStageBehavior = 'block';
 
         const velocityComponent =
           componentPools[ComponentKind.Velocity][newEntity];
@@ -69,7 +69,7 @@ export default class EntityManager {
         stateComponent.state = new AvoiderControlledState(
           newEntity,
           componentPools,
-          this._game.getGameStage(),
+          this._game.getStage(),
           this._game.getTextureMap(EntityKind.Avoider)
         ).enter();
 
@@ -91,7 +91,7 @@ export default class EntityManager {
         positionComponent.inUse = true;
         positionComponent.x = initComponents![ComponentKind.Position]!.x!;
         positionComponent.y = initComponents![ComponentKind.Position]!.y!;
-        positionComponent.removeIfOutside = false;
+        positionComponent.outsideStageBehavior = 'none';
 
         const velocityComponent =
           componentPools[ComponentKind.Velocity][newEntity];
@@ -102,9 +102,10 @@ export default class EntityManager {
         const stateComponent = componentPools[ComponentKind.State][newEntity];
         stateComponent.inUse = true;
         stateComponent.state = new TrackerSpawningState(
+          this._game.getShadowStage(),
           newEntity,
           this._game.getComponentPools(),
-          this._game.getGameStage(),
+          this._game.getStage(),
           this._game.getTextureMap(EntityKind.Tracker)
         ).enter();
         break;
@@ -116,7 +117,7 @@ export default class EntityManager {
         positionComponent.inUse = true;
         positionComponent.x = initComponents![ComponentKind.Position]!.x!;
         positionComponent.y = initComponents![ComponentKind.Position]!.y!;
-        positionComponent.removeIfOutside = true;
+        positionComponent.outsideStageBehavior = 'remove';
 
         const velocityComponent =
           componentPools[ComponentKind.Velocity][newEntity];
@@ -131,7 +132,7 @@ export default class EntityManager {
         stateComponent.state = new BulletShootingState(
           newEntity,
           this._game.getComponentPools(),
-          this._game.getGameStage(),
+          this._game.getStage(),
           this._game.getTextureMap(EntityKind.Bullet)
         ).enter();
 

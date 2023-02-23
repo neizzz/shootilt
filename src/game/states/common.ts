@@ -1,4 +1,4 @@
-import { Container, State, Texture } from 'pixi.js';
+import { Container, Texture } from 'pixi.js';
 
 import {
   ComponentKind,
@@ -11,7 +11,7 @@ import { IState } from '@game/models/state';
 /** 상태와 상태에 따른 Sprite 생명주기 관리 (update는 system에서 관리) */
 export class AbstractState implements IState {
   protected _entity: Entity;
-  protected _textureMap: Record<string, Texture | Texture[]>;
+  protected _textureMap!: Record<string, Texture | Texture[]>;
   protected _stage: Container;
   protected _componentPools: ComponentPools;
   protected _stateComponent: StateComponent;
@@ -24,14 +24,19 @@ export class AbstractState implements IState {
   ) {
     this._entity = entity;
     this._stage = stage;
-    this._textureMap = textureMap;
     this._componentPools = componentPools;
     this._stateComponent = this._componentPools[ComponentKind.State][entity];
+    this._textureMap = textureMap;
   }
 
-  enter(params?: any): AbstractState {
+  enter(): AbstractState {
     new Error('abstract method');
     return this;
+  }
+
+  valueOf() {
+    throw new InvalidUseError();
+    return 'not reached';
   }
 
   handleEvent(event: Event | CustomEvent): void {
@@ -45,6 +50,12 @@ export class AbstractState implements IState {
       });
     });
     this._stateComponent.sprites = [];
+  }
+}
+
+export class InvalidUseError extends Error {
+  constructor() {
+    super('invalid use');
   }
 }
 

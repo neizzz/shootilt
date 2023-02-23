@@ -20,6 +20,14 @@ export const randomPosition = (
 export const isOutsideStage = (x: number, y: number): boolean =>
   x < 0 || y < 0 || x > GameContext.VIEW_WIDTH || y > GameContext.VIEW_HEIGHT;
 
+export const clampIntoStage = (x: number, y: number): SimplePoint => {
+  x = Math.max(0, x);
+  x = Math.min(GameContext.VIEW_WIDTH, x);
+  y = Math.max(0, y);
+  y = Math.min(GameContext.VIEW_HEIGHT, y);
+  return { x, y };
+};
+
 export const distance = (p1: SimplePoint, p2: SimplePoint): number => {
   return Math.sqrt(
     (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y)

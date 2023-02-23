@@ -1,4 +1,4 @@
-import { AnimatedSprite, Sprite, Texture } from 'pixi.js';
+import { AnimatedSprite, Container, Sprite, Texture } from 'pixi.js';
 
 import { GameEvent } from '@game/models/event';
 
@@ -10,6 +10,16 @@ export enum TrackerStateValue {
 }
 
 export class TrackerSpawningState extends AbstractState {
+  private _shadowStage: Container; // FIXME:
+
+  constructor(
+    shadowStage: Container,
+    ...superParams: ConstructorParameters<typeof AbstractState>
+  ) {
+    super(...superParams);
+    this._shadowStage = shadowStage;
+  }
+
   enter(): TrackerSpawningState {
     const spawningSprite = new AnimatedSprite(
       this._textureMap.SpawningBody as Texture[]
@@ -29,6 +39,7 @@ export class TrackerSpawningState extends AbstractState {
     switch (event.type) {
       case GameEvent.Spawn: {
         this._stateComponent.state = new TrackerTrackingState(
+          this._shadowStage,
           this._entity,
           this._componentPools,
           this._stage,
@@ -48,12 +59,22 @@ export class TrackerSpawningState extends AbstractState {
 }
 
 export class TrackerTrackingState extends AbstractState {
+  private _shadowStage: Container; // FIXME:
+
+  constructor(
+    shadowStage: Container,
+    ...superParams: ConstructorParameters<typeof AbstractState>
+  ) {
+    super(...superParams);
+    this._shadowStage = shadowStage;
+  }
+
   enter(): TrackerTrackingState {
     const shadowSprite = new Sprite(this._textureMap.Shadow as Texture);
     shadowSprite.zIndex = -1;
     shadowSprite.anchor.set(0.5);
     this._stateComponent.sprites.push(shadowSprite);
-    this._stage.addChild(shadowSprite);
+    this._shadowStage.addChild(shadowSprite);
     return this;
   }
 

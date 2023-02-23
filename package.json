@@ -8,13 +8,13 @@
     "build:prod": "tsc && vite build"
   },
   "dependencies": {
-    "gsap": "^3.11.4",
-    "pixi.js": "^6.5.8",
+    "pixi.js": "^6.5.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "styled-components": "^5.3.6"
   },
   "devDependencies": {
+    "@pixi/particle-emitter": "^5.0.8",
     "@trivago/prettier-plugin-sort-imports": "^4.0.0",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
@@ -48,4 +48,3 @@
     "importOrderSortSpecifiers": true
   }
 }
-
