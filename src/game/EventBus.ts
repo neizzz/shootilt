@@ -31,14 +31,15 @@ export default class EventBus {
     this._stateComponents = stateComponents;
   }
 
-  dispatchToEntity(event: GameEvent, entity: Entity): void {
+  dispatchToEntity(event: GameEvent, entity: Entity, params?: AnyObject): void {
     console.debug(`[EVENT: ${event}, ENTITY: ${entity}]`);
 
-    const e = new CustomEvent(event);
     const stateComponent = this._stateComponents[entity];
-    stateComponent.state?.handleEvent(e);
+    stateComponent.state?.handleEvent(event, params);
+
     this.dispatch(event, { stateValue: this._stateValueFromEntity(entity) });
 
+    /** FIXME: ad-hoc process */
     if (event === GameEvent.Dead) {
       if (entity === this._entityManager.getPlayerEntity()) {
         this._game.endRound();
@@ -48,7 +49,7 @@ export default class EventBus {
     }
   }
 
-  dispatch(event: GameEvent, params?: any): void {
+  dispatch(event: GameEvent, params?: AnyObject): void {
     this._subscribers[event]?.forEach((callback) => callback(params));
   }
 

@@ -2,16 +2,14 @@ import Game, { GameContext } from '@game';
 
 import { ComponentKind, PartialComponents } from '@game/models/component';
 import { Entity, EntityKind } from '@game/models/entity';
-import { GameEvent } from '@game/models/event';
 
 import { AvoiderControlledState } from '@game/states/avoider';
-import { BulletShootingState } from '@game/states/bullet';
-import { TrackerTrackingState } from '@game/states/tracker';
+import { BulletLoadingState } from '@game/states/bullet';
+import { TrackerStateValue } from '@game/states/tracker';
 import { TrackerSpawningState } from '@game/states/tracker';
 
 import { increasingKeys } from '@game/utils/array';
 import { CircularQueue } from '@game/utils/container';
-import { headCircleCenter } from '@game/utils/in-game';
 
 import HashSet from './utils/container/HashSet';
 
@@ -69,9 +67,10 @@ export default class EntityManager {
         stateComponent.state = new AvoiderControlledState(
           newEntity,
           componentPools,
-          this._game.getStage(),
-          this._game.getTextureMap(EntityKind.Avoider)
-        ).enter();
+          this._game.getStage()
+        )
+          .setAssetBundleKey(AssetKey.__PLAYER_AVOIDER_BUNDLE__)
+          .enter();
 
         const { width } = stateComponent.sprites[0].getBounds();
         const collideComponent =
@@ -102,12 +101,13 @@ export default class EntityManager {
         const stateComponent = componentPools[ComponentKind.State][newEntity];
         stateComponent.inUse = true;
         stateComponent.state = new TrackerSpawningState(
-          this._game.getShadowStage(),
           newEntity,
           this._game.getComponentPools(),
-          this._game.getStage(),
-          this._game.getTextureMap(EntityKind.Tracker)
-        ).enter();
+          this._game.getStage()
+        )
+          .setAssetBundleKey(AssetKey.__TRACKER_BUNDLE__)
+          .setShadowStage(this._game.getShadowStage())
+          .enter();
         break;
       }
 
@@ -129,25 +129,15 @@ export default class EntityManager {
         stateComponent.inUse = true;
         stateComponent.rotation =
           initComponents![ComponentKind.State]!.rotation!;
-        stateComponent.state = new BulletShootingState(
+        stateComponent.state = new BulletLoadingState(
           newEntity,
           this._game.getComponentPools(),
-          this._game.getStage(),
-          this._game.getTextureMap(EntityKind.Bullet)
-        ).enter();
+          this._game.getStage()
+        )
+          .setAssetBundleKey(AssetKey.__PLAYER_BULLET_BUNDLE__)
+          .setEnemyEntitySet(this._enemyEntitySet)
+          .enter();
 
-        const { width, height } = stateComponent.sprites[0].getBounds();
-        const collideComponent =
-          componentPools[ComponentKind.Collide][newEntity];
-        collideComponent.inUse = true;
-        collideComponent.distFromCenter = headCircleCenter(
-          width,
-          height,
-          stateComponent.rotation
-        );
-        collideComponent.radius = width / 2;
-        collideComponent.targetEntitiesRef = this._enemyEntitySet.keysRef();
-        collideComponent.eventToTarget = GameEvent.Dead;
         break;
       }
 
@@ -171,8 +161,8 @@ export default class EntityManager {
 
     const stateComponent = componentPools[ComponentKind.State][entity];
 
-    /** FIXME: */
-    if (stateComponent.state instanceof TrackerTrackingState) {
+    /** FIXME: ad-hoc process */
+    if (stateComponent.state?.valueOf?.() === TrackerStateValue.Tracking) {
       this._enemyEntitySet.remove(entity);
     }
 

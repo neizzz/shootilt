@@ -5,6 +5,7 @@ import {
   Container,
   Graphics,
   ParticleContainer,
+  Renderer,
   Texture,
 } from 'pixi.js';
 
@@ -36,9 +37,18 @@ import { SealedArray } from '@game/utils/container';
 import { generateTexture } from '@game/utils/in-game';
 import { now } from '@game/utils/time';
 
+import AssetStore, { AssetBundle } from './AssetStore';
 import DebugDashboardSystem from './systems/DebugDashboardSystem';
 import DebugVelocityInputSystem from './systems/DebugVelocityInputSystem';
 import ScoreSystem from './systems/ScoreSystem';
+
+window.GameContext = {
+  VIEW_WIDTH: window.innerWidth,
+  VIEW_HEIGHT: window.innerHeight,
+  MAX_ENTITY_COUNT: 512,
+  renderer: undefined,
+  assetStore: undefined,
+};
 
 export const GameContext = window.GameContext;
 
@@ -73,7 +83,7 @@ export default class Game {
       backgroundColor: 0x000000,
       resolution: window.devicePixelRatio,
       autoDensity: true,
-      antialias: false,
+      antialias: true,
       powerPreference: 'high-performance',
       autoStart: false,
     });
@@ -95,9 +105,11 @@ export default class Game {
      * PC(m1 pro기준)에서는 FPS변동이 심해짐 */
     this._gameApp.ticker.minFPS = 30;
     this._gameApp.ticker.maxFPS = 60;
-    window.GameContext.renderer = this._gameApp.renderer;
 
-    this._initTextureMaps();
+    window.GameContext.renderer = this._gameApp.renderer as Renderer;
+    window.GameContext.assetStore = new AssetStore();
+
+    this._initTextureAssets();
 
     this._gameApp.ticker.add((delta) => {
       this._systems.forEach((system) => system.update(delta)); // convert to second
@@ -153,11 +165,11 @@ export default class Game {
         this._componentPools[ComponentKind.Collide],
         this._componentPools[ComponentKind.Position]
       ),
-      new DebugCollideAreaViewSystem(
-        this.getStage(),
-        this._componentPools[ComponentKind.Collide],
-        this._componentPools[ComponentKind.Position]
-      ),
+      // new DebugCollideAreaViewSystem(
+      //   this.getStage(),
+      //   this._componentPools[ComponentKind.Collide],
+      //   this._componentPools[ComponentKind.Position]
+      // ),
       new DebugDashboardSystem(this._gameApp),
       new RenderSystem(
         this._componentPools[ComponentKind.Position],
@@ -165,15 +177,17 @@ export default class Game {
       ),
       new TrailEffectSystem(
         this._componentPools[ComponentKind.Position][playerEntity],
-        this._textureMaps[EntityKind.Avoider]!.Body as Texture,
+        (
+          GameContext.assetStore?.get(
+            AssetKey.__PLAYER_BULLET_BUNDLE__
+          ) as AssetBundle
+        )['body-texture'] as Texture,
         this._particleContainer
       ),
       new ShootingSystem(
         this.getStage(),
         this._componentPools[ComponentKind.Position][playerEntity],
-        (initComponents: PartialComponents) => {
-          this._entityManager.createEntity(EntityKind.Bullet, initComponents);
-        }
+        this._eventBus
       )
     );
 
@@ -243,23 +257,18 @@ export default class Game {
     this._gameApp.ticker.stop();
   }
 
-  private _initTextureMaps() {
-    this._textureMaps = {
-      [EntityKind.Avoider]: {
-        Body: generateTexture(
-          new Graphics().beginFill(0x495c83).drawCircle(0, 0, 6).endFill()
-        ),
-      },
-      [EntityKind.Tracker]: {
-        SpawningBody: increasingKeys(60).map((num) => {
-          const currentGraphics = new Graphics();
-          currentGraphics.beginFill(0xeb455f);
-          currentGraphics.drawCircle(0, 0, 0.1 * num);
-          currentGraphics.endFill();
-          currentGraphics.cacheAsBitmap = true;
-          return generateTexture(currentGraphics);
-        }),
-        Shadow: (() => {
+  private _initTextureAssets() {
+    (GameContext.assetStore as AssetStore)
+      .add(AssetKey.__PLAYER_AVOIDER_BUNDLE__, {
+        'body-texture': (() => {
+          const graphics = new Graphics()
+            .beginFill(0xfcffe7, 0.4)
+            .drawCircle(0, 0, 8)
+            .endFill();
+          graphics.cacheAsBitmap = true;
+          return generateTexture(graphics);
+        })(),
+        'shadow-texture': (() => {
           const graphics = new Graphics()
             .beginFill(0xfcffe7)
             .drawCircle(0, 0, 8)
@@ -267,13 +276,43 @@ export default class Game {
           graphics.cacheAsBitmap = true;
           return generateTexture(graphics);
         })(),
-      },
-      [EntityKind.Bullet]: {
-        BasicBody: Texture.from(`${__IMAGE_ASSET_DIR__}/fire-bullet.png`),
-        FireBody: Texture.from(`${__IMAGE_ASSET_DIR__}/fire-bullet.png`),
-        IceBody: Texture.from(`${__IMAGE_ASSET_DIR__}/ice-bullet.png`),
-      },
-    };
+      })
+      .add(AssetKey.__PLAYER_BULLET_BUNDLE__, {
+        'spawn-animation-texture': increasingKeys(60).map((num) => {
+          const currentGraphics = new Graphics();
+          currentGraphics.beginFill(0xeb455f);
+          currentGraphics.drawCircle(0, 0, 0.1 * num);
+          currentGraphics.endFill();
+          currentGraphics.cacheAsBitmap = true;
+          return generateTexture(currentGraphics);
+        }),
+        'body-texture': (() => {
+          const graphics = new Graphics()
+            .beginFill(0xeb455f)
+            .drawCircle(0, 0, 8)
+            .endFill();
+          graphics.cacheAsBitmap = true;
+          return generateTexture(graphics);
+        })(),
+      })
+      .add(AssetKey.__TRACKER_BUNDLE__, {
+        'spawn-animation-texture': increasingKeys(60).map((num) => {
+          const currentGraphics = new Graphics();
+          currentGraphics.beginFill(0xeb455f);
+          currentGraphics.drawCircle(0, 0, 0.1 * num);
+          currentGraphics.endFill();
+          currentGraphics.cacheAsBitmap = true;
+          return generateTexture(currentGraphics);
+        }),
+        'shadow-texture': (() => {
+          const graphics = new Graphics()
+            .beginFill(0xfcffe7)
+            .drawCircle(0, 0, 8)
+            .endFill();
+          graphics.cacheAsBitmap = true;
+          return generateTexture(graphics);
+        })(),
+      });
   }
 
   private _initComponentsPool() {

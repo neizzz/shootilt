@@ -1,7 +1,9 @@
+import { GameEvent } from './event';
+
 export interface IState {
-  enter(): ThisType<this>;
-  valueOf?: () => string;
+  enter(params?: AnyObject): this;
+  valueOf: () => string;
   destroy(): void;
-  handleEvent(event: Event | CustomEvent): void;
+  handleEvent(event: GameEvent, params?: AnyObject): void;
 }
 

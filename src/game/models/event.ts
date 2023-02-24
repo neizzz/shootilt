@@ -1,7 +1,9 @@
 export enum GameEvent {
-  None = 'common-event/None',
-  Spawn = 'common-event/spawn',
-  Dead = 'common-event/dead',
-  OutsideStage = 'common-event/outside-stage',
+  None = 'game-event/None',
+  Spawn = 'game-event/spawn',
+  Dead = 'game-event/dead',
+  OutsideStage = 'game-event/outside-stage',
+  BulletLoadEnd = 'game-event/bullet-load-end',
+  BulletShoot = 'game-event/bullet-shoot',
 }
 

@@ -7,8 +7,9 @@ export enum AvoiderStateValue {
 }
 
 export class AvoiderControlledState extends AbstractState {
-  enter(): AvoiderControlledState {
-    const sprite = new Sprite(this._textureMap.Body as Texture);
+  enter(): this {
+    const assetBundle = this.getAssetBundle();
+    const sprite = new Sprite(assetBundle['body-texture'] as Texture);
     sprite.anchor.set(0.5);
     this._stateComponent.sprites.push(sprite);
     this._stage.addChild(sprite);

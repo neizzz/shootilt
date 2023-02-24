@@ -14,9 +14,14 @@ export default defineConfig(({ mode }) => {
       minify: isProduction ? true : false,
     },
     define: {
-      __IMAGE_ASSET_DIR__: '"/assets/images"',
-      __FONT_ASSET_DIR__: '"/assets/fonts"',
+      // __IMAGE_ASSET_DIR__: '"/assets/images"',
+      // __FONT_ASSET_DIR__: '"/assets/fonts"',
       __SCORE_FONT_NAME__: '"Gamer"',
+      AssetKey: {
+        __PLAYER_AVOIDER_BUNDLE__: 'asset-key/player-avoider-bundle',
+        __PLAYER_BULLET_BUNDLE__: 'asset-key/player-bullet-bundle',
+        __TRACKER_BUNDLE__: 'asset-key/tracker-bundle',
+      },
     },
     plugins: [react(), tsconfigPaths(), basicSsl()],
   };

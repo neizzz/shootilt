@@ -2,7 +2,11 @@ import { AnimatedSprite, Container, Sprite, Texture } from 'pixi.js';
 
 import { GameEvent } from '@game/models/event';
 
-import { AbstractState, InvalidEventTypeError } from './common';
+import {
+  AbstractState,
+  InvalidEventTypeError,
+  InvalidUseError,
+} from './common';
 
 export enum TrackerStateValue {
   Spawning = 'tracker-state/spawning',
@@ -10,22 +14,22 @@ export enum TrackerStateValue {
 }
 
 export class TrackerSpawningState extends AbstractState {
-  private _shadowStage: Container; // FIXME:
+  private _shadowStage!: Container;
 
-  constructor(
-    shadowStage: Container,
-    ...superParams: ConstructorParameters<typeof AbstractState>
-  ) {
-    super(...superParams);
+  setShadowStage(shadowStage: Container): this {
     this._shadowStage = shadowStage;
+    return this;
   }
 
-  enter(): TrackerSpawningState {
+  enter(): this {
+    if (!this._shadowStage) throw new InvalidUseError();
+
+    const assetBundle = this.getAssetBundle();
     const spawningSprite = new AnimatedSprite(
-      this._textureMap.SpawningBody as Texture[]
+      assetBundle['spawn-animation-texture'] as Texture[]
     );
     spawningSprite.onComplete = () => {
-      this.handleEvent(new CustomEvent(GameEvent.Spawn));
+      this.handleEvent(GameEvent.Spawn);
     };
     spawningSprite.play();
     spawningSprite.loop = false;
@@ -35,16 +39,17 @@ export class TrackerSpawningState extends AbstractState {
     return this;
   }
 
-  handleEvent(event: Event | CustomEvent) {
-    switch (event.type) {
+  handleEvent(event: GameEvent) {
+    switch (event) {
       case GameEvent.Spawn: {
         this._stateComponent.state = new TrackerTrackingState(
-          this._shadowStage,
           this._entity,
           this._componentPools,
-          this._stage,
-          this._textureMap
-        ).enter();
+          this._stage
+        )
+          .setAssetBundleKey(this._assetBundleKey!)
+          .setShadowStage(this._shadowStage)
+          .enter();
         break;
       }
 
@@ -59,34 +64,24 @@ export class TrackerSpawningState extends AbstractState {
 }
 
 export class TrackerTrackingState extends AbstractState {
-  private _shadowStage: Container; // FIXME:
+  private _shadowStage?: Container;
 
-  constructor(
-    shadowStage: Container,
-    ...superParams: ConstructorParameters<typeof AbstractState>
-  ) {
-    super(...superParams);
+  setShadowStage(shadowStage: Container): this {
     this._shadowStage = shadowStage;
+    return this;
   }
 
-  enter(): TrackerTrackingState {
-    const shadowSprite = new Sprite(this._textureMap.Shadow as Texture);
+  enter(): this {
+    if (!this._shadowStage) throw new InvalidUseError();
+
+    const assetBundle = this.getAssetBundle();
+    const shadowSprite = new Sprite(assetBundle['shadow-texture'] as Texture);
     shadowSprite.zIndex = -1;
     shadowSprite.anchor.set(0.5);
     this._stateComponent.sprites.push(shadowSprite);
     this._shadowStage.addChild(shadowSprite);
     return this;
   }
-
-  // setTargetEntity() {
-  // }
-
-  // handleEvent(event: Event | CustomEvent) {
-  //   switch (event.type) {
-  //     default:
-  //       throw new InvalidEventTypeError();
-  //   }
-  // }
 
   valueOf() {
     return TrackerStateValue.Tracking;
