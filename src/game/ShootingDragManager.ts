@@ -19,7 +19,7 @@ export default class ShootingDragManager {
 
   private _sightLineGraphics?: Graphics;
   private _dragContext?: {
-    startPoint: SimplePoint;
+    startPoint: PositionType;
     distance: number;
     rotation: number;
   };

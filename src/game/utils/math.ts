@@ -1,11 +1,13 @@
-export const distance = (p1: SimplePoint, p2: SimplePoint): number => {
+import { PositionType } from '@game/models/ecs';
+
+export const distance = (p1: PositionType, p2: PositionType): number => {
   return Math.sqrt(
     (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y)
   );
 };
 
 /** calculate theta(radian) based on y-axis */
-export const theta = (base: SimplePoint, target: SimplePoint): number => {
+export const theta = (base: PositionType, target: PositionType): number => {
   const diffX = target.x - base.x;
   const diffY = target.y - base.y;
   let theta: number;

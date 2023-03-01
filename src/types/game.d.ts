@@ -15,12 +15,5 @@ declare global {
   }
 
   type Key = string | number | symbol;
-
-  type SimplePoint = {
-    x: number;
-    y: number;
-  };
-
-  type CachedKeysRef<T> = { current: T[] };
 }
 
