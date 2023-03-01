@@ -32,6 +32,7 @@ export enum TextureKind {
   ChaserShadow,
   BulletLoadingAnimation,
   BulletBody,
+  BulletTrail,
 }
 
 /** Enum(Behavior) */

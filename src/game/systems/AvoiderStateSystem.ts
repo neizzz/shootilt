@@ -101,7 +101,7 @@ export default class AvoiderStateSystem implements ISystem {
     this._textureByKind = {
       [TextureKind.AvoiderBody]: (() => {
         const graphics = new Graphics()
-          .beginFill(0x6eccaf, 0.5)
+          .beginFill(0x6eccaf)
           .drawCircle(0, 0, ObjectSize.AvoiderRadius)
           .endFill();
         graphics.cacheAsBitmap = true;

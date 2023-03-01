@@ -34,7 +34,8 @@ import {
 
 type BulletTextureKind =
   | TextureKind.BulletLoadingAnimation
-  | TextureKind.BulletBody;
+  | TextureKind.BulletBody
+  | TextureKind.BulletTrail;
 
 export default class BulletStateSystem implements ISystem {
   private _stage: Container;
@@ -95,7 +96,7 @@ export default class BulletStateSystem implements ISystem {
 
           const trailEffectSystem = new TrailEffectSystem(
             bullet as Entity,
-            this._textureByKind[TextureKind.BulletBody] as Texture,
+            this._textureByKind[TextureKind.BulletTrail] as Texture,
             this._particleContainer
           );
           trailEffectSystem.update();
@@ -131,9 +132,17 @@ export default class BulletStateSystem implements ISystem {
 
   private _initTextures() {
     this._textureByKind = {
+      [TextureKind.BulletTrail]: (() => {
+        const graphics = new Graphics()
+          .beginFill(0x6eccaf, 0.5)
+          .drawCircle(0, 0, ObjectSize.AvoiderRadius)
+          .endFill();
+        graphics.cacheAsBitmap = true;
+        return generateTexture(graphics);
+      })(),
       [TextureKind.BulletLoadingAnimation]: increasingKeys(60).map((num) => {
         const currentGraphics = new Graphics();
-        currentGraphics.beginFill(0x68b984);
+        currentGraphics.beginFill(0x285430);
         currentGraphics.drawCircle(0, 0, (ObjectSize.ChaserRadius * num) / 60);
         currentGraphics.endFill();
         currentGraphics.cacheAsBitmap = true;
@@ -141,7 +150,7 @@ export default class BulletStateSystem implements ISystem {
       }),
       [TextureKind.BulletBody]: (() => {
         const graphics = new Graphics()
-          .beginFill(0x68b984)
+          .beginFill(0x285430)
           .drawCircle(0, 0, ObjectSize.BulletRadius)
           .endFill();
         graphics.cacheAsBitmap = true;

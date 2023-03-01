@@ -24,7 +24,7 @@ export default class TrailEffectSystem implements ISystem {
           },
           scale: {
             start: 1,
-            end: 0.2,
+            end: 0.6,
             minimumScaleMultiplier: 1,
           },
           color: {
