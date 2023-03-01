@@ -1,6 +1,4 @@
-import { Application } from 'pixi.js';
-
-import { ISystem } from '@game/models/system';
+import { Application, ISystem } from 'pixi.js';
 
 export default class DebugDashboardSystem implements ISystem {
   private _gameApp: Application;

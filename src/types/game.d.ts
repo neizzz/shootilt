@@ -1,4 +1,5 @@
 import AssetStore from '@game/AssetStore';
+import EventBus from '@game/EventBus';
 import { Renderer } from 'pixi.js';
 
 export {};
@@ -10,9 +11,10 @@ declare global {
       VIEW_HEIGHT: number;
       MAX_ENTITY_COUNT: 512;
       renderer?: Renderer;
-      assetStore?: AssetStore;
     };
   }
+
+  type Key = string | number | symbol;
 
   type SimplePoint = {
     x: number;

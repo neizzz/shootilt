@@ -1,22 +1,15 @@
-import EventBus from '@game/EventBus';
 import { BitmapFont, BitmapText, Container } from 'pixi.js';
 
 import { GameContext } from '@game';
 
-import { GameEvent } from '@game/models/event';
-import { ISystem } from '@game/models/system';
-
-import { TrackerStateValue } from './../states/tracker';
+import { ISystem } from '@game/models/ecs';
 
 export default class ScoreSystem implements ISystem {
   private _score = 0;
   private _scoreText: BitmapText;
   private _intervalTimer: ReturnType<typeof setInterval>;
-  private _eventBus: EventBus;
 
-  private _boundTrackerDeadListener = this._trackerDeadListener.bind(this);
-
-  constructor(stage: Container, eventBus: EventBus) {
+  constructor(stage: Container) {
     /** TODO: 외부 ttf를 BitmapFont로 로드하는 거는 좀더 리서치 필요 */
     BitmapFont.from(
       __SCORE_FONT_NAME__,
@@ -41,14 +34,10 @@ export default class ScoreSystem implements ISystem {
     this._intervalTimer = setInterval(() => {
       this._addScore(1); // TODO: apply factor
     }, 1000);
-
-    this._eventBus = eventBus;
-    this._eventBus.register(GameEvent.Dead, this._boundTrackerDeadListener);
   }
 
   destroy() {
     clearInterval(this._intervalTimer);
-    this._eventBus.unregister(GameEvent.Dead, this._boundTrackerDeadListener);
   }
 
   update() {
@@ -57,9 +46,7 @@ export default class ScoreSystem implements ISystem {
   }
 
   private _trackerDeadListener({ stateValue }: { stateValue?: string }) {
-    if (stateValue === TrackerStateValue.Tracking) {
-      this._addScore(3); // TODO: apply factor
-    }
+    this._addScore(3); // TODO: apply factor
   }
 
   private _addScore(scoreToAdd: number) {

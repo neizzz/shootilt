@@ -7,7 +7,6 @@ import {
   useEffect,
   useRef,
 } from 'react';
-import { createGlobalStyle } from 'styled-components';
 
 import Game from '@game';
 
@@ -60,7 +59,7 @@ const GameDispatcherProvider = ({ children }: Props) => {
         break;
 
       case 'start-round':
-        gameInstance.init();
+        // gameInstance.init();
         gameInstance.appendViewTo(action.payload.parentEl);
         gameInstance.startRound();
         break;

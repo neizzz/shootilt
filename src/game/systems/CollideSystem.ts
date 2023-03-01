@@ -1,67 +1,73 @@
-import EventBus from '@game/EventBus';
+import * as Ecs from 'bitecs';
 
-import { GameContext } from '@game';
+import { EntityKind } from '@game/models/constant';
+import {
+  AvoiderTag,
+  BulletTag,
+  ChaserTag,
+  CollideStore,
+  ISystem,
+  PositionStore,
+} from '@game/models/ecs';
 
-import { CollideComponent, PositionComponent } from '@game/models/component';
-import { Entity } from '@game/models/entity';
-import { ISystem } from '@game/models/system';
-
-import { distance } from '@game/utils/in-game';
+import { distance } from '@game/utils/math';
 
 export default class CollideSystem implements ISystem {
-  private _eventBus: EventBus;
-  private _collideComponents: CollideComponent[];
-  private _positionComponents: PositionComponent[];
+  private _queryCollisionableEntities = Ecs.defineQuery([CollideStore]);
 
-  constructor(
-    eventDispatcher: EventBus,
-    collideComponents: CollideComponent[],
-    positionComponents: PositionComponent[]
-  ) {
-    this._eventBus = eventDispatcher;
-    this._collideComponents = collideComponents;
-    this._positionComponents = positionComponents;
-  }
+  /** TODO: 더 나은 방법?? */
+  private _queryAvoiders = Ecs.defineQuery([AvoiderTag]);
+  private _queryChasers = Ecs.defineQuery([ChaserTag]);
+  private _queryBullets = Ecs.defineQuery([BulletTag]);
 
-  update() {
-    for (
-      let entity = 0 as Entity;
-      entity < GameContext.MAX_ENTITY_COUNT;
-      entity++
-    ) {
-      if (!this._checkInUse(entity)) continue;
+  /** TODO: FIXME: 이렇게 switch문을 쓰는 방법밖에 없나? */
+  update(world: Ecs.IWorld) {
+    this._queryCollisionableEntities(world).forEach((collisionable) => {
+      const targets = (() => {
+        switch (CollideStore.targetEntityKind[collisionable]) {
+          case EntityKind.Avoider:
+            return this._queryAvoiders(world);
+          case EntityKind.Chaser:
+            return this._queryChasers(world);
+          case EntityKind.Bullet:
+            return this._queryBullets(world);
+        }
+      })();
 
-      const collide = this._collideComponents[entity];
-      const position = this._positionComponents[entity];
+      if (!targets) return;
 
-      collide.targetEntitiesRef?.current.forEach((targetEntity) => {
-        if (!this._checkInUse(targetEntity)) return;
+      const baseRadius = CollideStore.hitRadius[collisionable];
 
-        const targetCollide = this._collideComponents[targetEntity];
-        const targetPosition = this._positionComponents[targetEntity];
+      targets.forEach((target) => {
         const dist = distance(
           {
-            x: position.x + collide.distFromCenter.x,
-            y: position.y + collide.distFromCenter.y,
+            x: PositionStore.x[collisionable],
+            y: PositionStore.y[collisionable],
           },
           {
-            x: targetPosition.x + targetCollide.distFromCenter.x,
-            y: targetPosition.y + targetCollide.distFromCenter.y,
+            x: PositionStore.x[target],
+            y: PositionStore.y[target],
           }
         );
 
-        if (dist < collide.radius + targetCollide.radius) {
-          this._eventBus.dispatchToEntity(collide.eventToTarget!, targetEntity);
+        if (dist < baseRadius + CollideStore.hitRadius[target]) {
+          switch (CollideStore.targetEntityKind[collisionable]) {
+            case EntityKind.Avoider:
+              AvoiderTag.state[target] =
+                CollideStore.hitStateToTarget[collisionable];
+              break;
+            case EntityKind.Chaser:
+              ChaserTag.state[target] =
+                CollideStore.hitStateToTarget[collisionable];
+              break;
+            case EntityKind.Bullet:
+              BulletTag.state[target] =
+                CollideStore.hitStateToTarget[collisionable];
+              break;
+          }
         }
       });
-    }
-  }
-
-  private _checkInUse(entity: Entity) {
-    return (
-      this._collideComponents[entity].inUse &&
-      this._positionComponents[entity].inUse
-    );
+    });
   }
 }
 
