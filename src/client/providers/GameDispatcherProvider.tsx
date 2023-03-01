@@ -51,6 +51,7 @@ const GameDispatcherProvider = ({ children }: Props) => {
       throw new Error('game instance is not initialized');
     }
 
+    console.debug('GameAction:', action.type);
     const gameInstance = gameInstanceRef.current;
 
     switch (action.type) {
@@ -59,7 +60,6 @@ const GameDispatcherProvider = ({ children }: Props) => {
         break;
 
       case 'start-round':
-        // gameInstance.init();
         gameInstance.appendViewTo(action.payload.parentEl);
         gameInstance.startRound();
         break;

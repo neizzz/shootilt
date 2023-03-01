@@ -60,7 +60,11 @@ export default class BulletStateSystem implements ISystem {
     this._initTextures();
   }
 
-  destroy() {
+  destroy(world: Ecs.IWorld) {
+    // Ecs.removeQuery(world, this._queryBullets);
+    // Ecs.removeQuery(world, this._queryChangedBullets);
+    // Ecs.removeQuery(world, this._queryEnteredBullets);
+    // Ecs.removeQuery(world, this._queryExitedBullets);
     /** TODO:
      * textureByKind
      * spriteByBullet
@@ -86,8 +90,9 @@ export default class BulletStateSystem implements ISystem {
 
     this._queryChangedBullets(world).forEach((bullet) => {
       switch (BulletTag.state[bullet]) {
-        case BulletState.Loading:
-          throw new Error('not reached');
+        /** DEBUG: */
+        // case BulletState.Loading:
+        //   throw new Error('not reached');
 
         case BulletState.Ready:
           const bodySprite = createSprite(

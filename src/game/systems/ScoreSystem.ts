@@ -1,13 +1,17 @@
 import { BitmapFont, BitmapText, Container } from 'pixi.js';
 
+import * as Ecs from 'bitecs';
+
 import { GameContext } from '@game';
 
-import { ISystem } from '@game/models/ecs';
+import { ChaserTag, ISystem } from '@game/models/ecs';
 
 export default class ScoreSystem implements ISystem {
   private _score = 0;
   private _scoreText: BitmapText;
   private _intervalTimer: ReturnType<typeof setInterval>;
+
+  private _queryExitedChasers = Ecs.exitQuery(Ecs.defineQuery([ChaserTag]));
 
   constructor(stage: Container) {
     /** TODO: 외부 ttf를 BitmapFont로 로드하는 거는 좀더 리서치 필요 */
@@ -40,18 +44,14 @@ export default class ScoreSystem implements ISystem {
     clearInterval(this._intervalTimer);
   }
 
-  update() {
+  update(world: Ecs.IWorld) {
+    this._addScore(3 * this._queryExitedChasers(world).length);
     this._scoreText.text = this._score.toString();
     this._scoreText.updateText();
   }
 
-  private _trackerDeadListener({ stateValue }: { stateValue?: string }) {
-    this._addScore(3); // TODO: apply factor
-  }
-
   private _addScore(scoreToAdd: number) {
     this._score += scoreToAdd;
-    this.update();
   }
 }
 

@@ -31,7 +31,7 @@ type Props = {
 };
 
 const MainMenu = ({ inGame }: Props) => {
-  const dispatchAppContext = useAppContext()[1];
+  const [_, dispatchAppContext] = useAppContext();
   const dispatchGameContext = useGameDispatcher();
 
   return (

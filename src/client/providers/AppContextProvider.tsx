@@ -6,8 +6,12 @@ import {
   useReducer,
 } from 'react';
 
+/** FIXME: */
+type ScreenType = 'main' | 'game' | 'game-round-end-modal';
+
 export type AppContext = {
-  currentScreen: 'main' | 'game' | 'game-round-end-modal';
+  previousScreen?: ScreenType;
+  currentScreen: ScreenType;
 };
 
 export type AppContextActionType = {
@@ -15,7 +19,10 @@ export type AppContextActionType = {
   payload?: any;
 };
 
-const initialAppContext: AppContext = { currentScreen: 'main' };
+const initialAppContext: AppContext = {
+  previousScreen: undefined,
+  currentScreen: 'main',
+};
 
 const appContext = createContext<[AppContext, Dispatch<AppContextActionType>]>([
   initialAppContext,
@@ -29,19 +36,23 @@ export const useAppContext = () => {
 const AppContextProvider = ({ children }: PropsWithChildren) => {
   const [state, dispatch] = useReducer(
     (state: AppContext, action: AppContextActionType): AppContext => {
+      console.debug('AppAction:', action.type);
       switch (action.type) {
         case 'start-game':
           return {
+            previousScreen: state.currentScreen,
             currentScreen: 'game',
           };
 
         case 'end-game-round':
           return {
+            previousScreen: state.currentScreen,
             currentScreen: 'game-round-end-modal',
           };
 
         case 'end-game':
           return {
+            previousScreen: state.currentScreen,
             currentScreen: 'main',
           };
       }

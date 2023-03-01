@@ -118,7 +118,7 @@ export type RotateType = {
  * System
  */
 export interface ISystem {
-  destroy?(): void;
+  destroy?(world?: Ecs.IWorld): void;
   update(world: Ecs.IWorld, delta: number): void;
 }
 

@@ -17,7 +17,7 @@ const StyledContainer = styled.div`
 `;
 
 const InGameView = () => {
-  const [{ currentScreen }] = useAppContext();
+  const [{ previousScreen, currentScreen }] = useAppContext();
   const dispatch = useGameDispatcher();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -30,12 +30,15 @@ const InGameView = () => {
       throw new Error('game container is not initialized.');
     }
 
-    dispatch({
-      type: 'start-round',
-      payload: {
-        parentEl: containerRef.current,
-      },
-    });
+    /** FIXME: '다시하기'인 경우 핸들링 */
+    if (previousScreen !== 'game-round-end-modal') {
+      dispatch({
+        type: 'start-round',
+        payload: {
+          parentEl: containerRef.current,
+        },
+      });
+    }
   }, [currentScreen]);
 
   return (

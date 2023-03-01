@@ -9,6 +9,8 @@ import { clampIntoStage, isOutsideStage } from '@game/utils/in-game';
 export default class MoveSystem implements ISystem {
   private _queryMovables = Ecs.defineQuery([VelocityStore]);
 
+  destroy() {}
+
   update(world: Ecs.IWorld, delta: number) {
     this._queryMovables(world).forEach((movable) => {
       let [newX, newY] = [

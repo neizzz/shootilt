@@ -123,12 +123,12 @@ export default class Game {
       new ChaserStateSystem(this.getStage(), this.getBackStage()),
       new BulletStateSystem(this.getStage(), this.getParticleContainer()),
       new SinglePlaySystem(this),
+      new ScoreSystem(this.getStage()),
     ];
 
     this._nonUpdateSystems = [
       new DebugVelocityInputSystem(this._world),
       new VelocityInputSystem(),
-      new ScoreSystem(this._stage as Container),
     ];
 
     this._startGameLoop();
@@ -146,14 +146,14 @@ export default class Game {
 
   destroy() {
     console.debug('Game instance destroyed.');
-    Ecs.deleteWorld(this._world);
     this._stage.removeChildren();
     this._backStage.removeChildren();
     this._particleContainer.removeChildren();
-    this._systems.forEach((system) => system.destroy?.());
+    this._systems.forEach((system) => system.destroy?.(this._world));
     this._systems = [];
-    this._nonUpdateSystems.forEach((system) => system.destroy?.());
+    this._nonUpdateSystems.forEach((system) => system.destroy?.(this._world));
     this._nonUpdateSystems = [];
+    Ecs.deleteWorld(this._world);
   }
 
   getStartTime(): number {

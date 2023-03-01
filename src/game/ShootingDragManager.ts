@@ -137,8 +137,6 @@ export default class ShootingDragManager {
       this._dragContext = undefined;
     }
 
-    // this._currentBulletEntity = undefined;
-
     this._stage.off('pointermove', this._dragMove, this);
   }
 }
