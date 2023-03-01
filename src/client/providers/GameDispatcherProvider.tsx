@@ -77,6 +77,8 @@ const GameDispatcherProvider = ({ children }: Props) => {
         break;
 
       case 'pause':
+        /** TODO: */
+        break;
     }
   }, []);
 

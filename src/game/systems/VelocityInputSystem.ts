@@ -2,6 +2,7 @@ import * as Ecs from 'bitecs';
 
 import {
   AvoiderTag,
+  EquippedBulletReference,
   ISystem,
   PlayerTag,
   VelocityStore,
@@ -37,7 +38,7 @@ export default class VelocityInputSystem implements ISystem {
     VelocityStore.x[player] = this._latestOrientation.x;
     VelocityStore.y[player] = this._latestOrientation.y;
 
-    const playerBullet = AvoiderTag.bullet[player];
+    const playerBullet = EquippedBulletReference.bullet[player];
     VelocityStore.x[playerBullet] = this._latestOrientation.x;
     VelocityStore.y[playerBullet] = this._latestOrientation.y;
 

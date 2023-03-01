@@ -4,6 +4,7 @@ import {
   AvoiderState,
   BulletState,
   ChaserState,
+  CommonState,
   ComponentKind,
   EntityKind,
   OutsideStageBehavior,
@@ -12,7 +13,7 @@ import {
 /**
  * Types
  */
-type State = AvoiderState | ChaserState | BulletState;
+type State = CommonState | AvoiderState | ChaserState | BulletState;
 
 /**
  * Entity
@@ -96,12 +97,12 @@ export type ChaseType = {
 };
 
 export const CollideStore = Ecs.defineComponent({
-  targetEntityKind: Ecs.Types.ui8 /** TODO: list화 해야됨. 2~3개정도? */,
-  hitStateToTarget: Ecs.Types.ui8 /** TODO: list화 해야됨. 2~3개정도? */,
+  targetKind: Ecs.Types.ui8 /** TODO: list화 해야됨. 3개 정도 */,
+  hitStateToTarget: Ecs.Types.ui8 /** TODO: list화 해야됨. 3개 정도 */,
   hitRadius: Ecs.Types.ui8,
 });
 export type CollideType = {
-  targetEntityKind: EntityKind;
+  targetKind: EntityKind;
   hitStateToTarget: State;
   hitRadius: number;
 };

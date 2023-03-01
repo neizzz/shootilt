@@ -24,7 +24,7 @@ export default class CollideSystem implements ISystem {
   update(world: Ecs.IWorld) {
     this._queryCollisionableEntities(world).forEach((collisionable) => {
       const targets = (() => {
-        switch (CollideStore.targetEntityKind[collisionable]) {
+        switch (CollideStore.targetKind[collisionable]) {
           case EntityKind.Avoider:
             return this._queryAvoiders(world);
           case EntityKind.Chaser:
@@ -51,7 +51,7 @@ export default class CollideSystem implements ISystem {
         );
 
         if (dist < baseRadius + CollideStore.hitRadius[target]) {
-          switch (CollideStore.targetEntityKind[collisionable]) {
+          switch (CollideStore.targetKind[collisionable]) {
             case EntityKind.Avoider:
               AvoiderTag.state[target] =
                 CollideStore.hitStateToTarget[collisionable];

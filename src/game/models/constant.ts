@@ -21,7 +21,6 @@ export enum ComponentKind {
   Velocity,
   Chase,
   Collide,
-  // Render,
   Rotate,
 }
 export enum TextureKind {
@@ -42,16 +41,9 @@ export enum OutsideStageBehavior {
 }
 
 /** Enum(State) */
-// export enum State {
-//   Alive,
-//   Dead,
-//   Spawning,
-//   Chasing,
-//   BulletLoading,
-//   BulletReady,
-//   BulletShooted,
-// }
-
+export enum CommonState {
+  NULL,
+}
 export enum AvoiderState {
   Spawning,
   Avoiding,

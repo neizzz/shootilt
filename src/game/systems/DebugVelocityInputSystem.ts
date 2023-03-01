@@ -12,14 +12,14 @@ import {
 const DEBUG_VELOCITY_UNIT = 5;
 
 export default class DebugVelocityInputSystem implements ISystem {
+  private _world: Ecs.IWorld;
+
   private _queryPlayer = Ecs.defineQuery([PlayerTag]);
 
-  update() {}
-
-  constructor(world: Ecs.IWorld) {
-    window.addEventListener('keydown', (e) => {
+  private _keyHandlers = {
+    keydown: (e: KeyboardEvent) => {
       e.preventDefault();
-      const targets = this._getTargets(world);
+      const targets = this._getTargets();
 
       switch (e.code) {
         case 'ArrowLeft':
@@ -35,11 +35,10 @@ export default class DebugVelocityInputSystem implements ISystem {
           this._setVelocity(targets, { y: DEBUG_VELOCITY_UNIT });
           break;
       }
-    });
-
-    window.addEventListener('keyup', (e) => {
+    },
+    keyup: (e: KeyboardEvent) => {
       e.preventDefault();
-      const targets = this._getTargets(world);
+      const targets = this._getTargets();
 
       switch (e.code) {
         case 'ArrowLeft':
@@ -51,10 +50,24 @@ export default class DebugVelocityInputSystem implements ISystem {
           this._setVelocity(targets, { y: 0 });
           break;
       }
-    });
+    },
+  };
+
+  constructor(world: Ecs.IWorld) {
+    this._world = world;
+    window.addEventListener('keydown', this._keyHandlers.keydown);
+    window.addEventListener('keyup', this._keyHandlers.keyup);
   }
 
-  private _getTargets(world: Ecs.IWorld): Entity[] {
+  destroy() {
+    window.removeEventListener('keydown', this._keyHandlers.keydown);
+    window.removeEventListener('keyup', this._keyHandlers.keyup);
+  }
+
+  update() {}
+
+  private _getTargets(): Entity[] {
+    const world = this._world;
     const player = this._queryPlayer(world)[0];
     if (Ecs.hasComponent(world, VelocityStore, player)) {
       return [player, EquippedBulletReference.bullet[player]] as Entity[];

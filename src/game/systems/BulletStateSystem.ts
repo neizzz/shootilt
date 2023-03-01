@@ -9,6 +9,8 @@ import * as Ecs from 'bitecs';
 import {
   AvoiderState,
   BulletState,
+  ChaserState,
+  EntityKind,
   ObjectSize,
   OutsideStageBehavior,
   TextureKind,
@@ -31,6 +33,8 @@ import {
   createSprite,
   generateTexture,
 } from '@game/utils/in-game';
+
+import { CollideStore } from './../models/ecs';
 
 type BulletTextureKind =
   | TextureKind.BulletLoadingAnimation
@@ -104,9 +108,15 @@ export default class BulletStateSystem implements ISystem {
           break;
 
         case BulletState.Shooted:
-          /** TODO: Collide setting */
+          Ecs.addComponent(world, OutsideStageBehaviorStore, bullet);
           OutsideStageBehaviorStore.behavior[bullet] =
             OutsideStageBehavior.Remove;
+
+          Ecs.addComponent(world, CollideStore, bullet);
+          CollideStore.targetKind[bullet] = EntityKind.Chaser;
+          CollideStore.hitRadius[bullet] = ObjectSize.BulletRadius;
+          CollideStore.hitStateToTarget[bullet] = ChaserState.Dead;
+          break;
       }
     });
 

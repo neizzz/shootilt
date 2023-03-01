@@ -19,12 +19,12 @@ export default class TrailEffectSystem implements ISystem {
       upgradeConfig(
         {
           alpha: {
-            start: 0.04,
-            end: 0.01,
+            start: 0.1,
+            end: 0.02,
           },
           scale: {
             start: 1,
-            end: 0.6,
+            end: 0.8,
             minimumScaleMultiplier: 1,
           },
           color: {

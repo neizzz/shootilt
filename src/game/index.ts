@@ -20,6 +20,7 @@ import { ComponentKind } from './models/constant';
 import AvoiderStateSystem from './systems/AvoiderStateSystem';
 import BulletStateSystem from './systems/BulletStateSystem';
 import ChaserStateSystem from './systems/ChaserStateSystem';
+import SinglePlaySystem from './systems/SinglePlaySystem';
 import { createAvoider } from './utils/create-entity';
 
 window.GameContext = {
@@ -36,7 +37,8 @@ type GameInitOptions = {
 };
 
 export default class Game {
-  private _world: Ecs.IWorld;
+  // TODO: IWorld 검토, 상속받아서 GameContext대용으로 쓸 수 있을 듯
+  private _world!: Ecs.IWorld;
 
   private _gameApp: Application;
   private _stage: Container;
@@ -51,8 +53,8 @@ export default class Game {
   private _onEndRound!: () => void;
 
   constructor({ onEndRound }: GameInitOptions) {
-    // TODO: IWorld 검토, 상속받아서 GameContext대용으로 쓸 수 있을 듯
-    this._world = Ecs.createWorld(GameContext.MAX_ENTITY_COUNT);
+    console.debug('Game instance initialized.');
+
     this._onEndRound = onEndRound;
     this._gameApp = new Application({
       width: GameContext.VIEW_WIDTH,
@@ -87,7 +89,7 @@ export default class Game {
 
     this._gameApp.ticker
       .add((delta) => {
-        this._systems.forEach((system) => system.update(this._world, delta)); // convert to second
+        this._systems.forEach((system) => system.update(this._world, delta));
       })
       .stop();
   }
@@ -97,6 +99,7 @@ export default class Game {
   }
 
   startRound() {
+    this._world = Ecs.createWorld(GameContext.MAX_ENTITY_COUNT);
     this._timeInfo = Object.freeze({ start: now() });
 
     /** create the player's avoider + bullet */
@@ -108,18 +111,19 @@ export default class Game {
     });
 
     /** update */
-    this._systems.push(
+    this._systems = [
+      new DebugDashboardSystem(this._gameApp),
       new WaveSystem(this.getStartTime.bind(this)),
       new ChaseSystem(),
       new MoveSystem(),
       new CollideSystem(),
       new ScoreSystem(this.getStage()),
-      new DebugDashboardSystem(this._gameApp),
       new ShootingSystem(this.getStage()),
       new AvoiderStateSystem(this.getStage(), this.getBackStage()),
       new ChaserStateSystem(this.getStage(), this.getBackStage()),
-      new BulletStateSystem(this.getStage(), this.getParticleContainer())
-    );
+      new BulletStateSystem(this.getStage(), this.getParticleContainer()),
+      new SinglePlaySystem(this),
+    ];
 
     this._nonUpdateSystems = [
       new DebugVelocityInputSystem(this._world),
@@ -141,6 +145,8 @@ export default class Game {
   }
 
   destroy() {
+    console.debug('Game instance destroyed.');
+    Ecs.deleteWorld(this._world);
     this._stage.removeChildren();
     this._backStage.removeChildren();
     this._particleContainer.removeChildren();

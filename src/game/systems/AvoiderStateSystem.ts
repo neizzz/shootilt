@@ -6,9 +6,16 @@ import { Sprite } from 'pixi.js';
 
 import * as Ecs from 'bitecs';
 
-import { AvoiderState, ObjectSize, TextureKind } from '@game/models/constant';
+import {
+  AvoiderState,
+  CommonState,
+  EntityKind,
+  ObjectSize,
+  TextureKind,
+} from '@game/models/constant';
 import {
   AvoiderTag,
+  CollideStore,
   Entity,
   ISystem,
   PositionStore,
@@ -61,6 +68,11 @@ export default class AvoiderStateSystem implements ISystem {
           Ecs.addComponent(world, VelocityStore, avoider);
           VelocityStore.x[avoider] = 0;
           VelocityStore.y[avoider] = 0;
+
+          Ecs.addComponent(world, CollideStore, avoider);
+          CollideStore.targetKind[avoider] = EntityKind.NULL;
+          CollideStore.hitRadius[avoider] = ObjectSize.AvoiderRadius;
+          CollideStore.hitStateToTarget[avoider] = CommonState.NULL;
 
           const shadowSprite = createSprite(
             this._textureByKind[TextureKind.AvoiderShadow] as Texture

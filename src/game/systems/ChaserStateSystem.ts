@@ -1,13 +1,21 @@
 import { Texture } from '@pixi/core';
 import { Container } from '@pixi/display';
 import { Graphics } from '@pixi/graphics';
-import * as Ecs from 'bitecs';
 import { AnimatedSprite, Sprite } from 'pixi.js';
 
-import { ChaserState, ObjectSize, TextureKind } from '@game/models/constant';
+import * as Ecs from 'bitecs';
+
+import {
+  AvoiderState,
+  ChaserState,
+  EntityKind,
+  ObjectSize,
+  TextureKind,
+} from '@game/models/constant';
 import {
   ChaseStore,
   ChaserTag,
+  CollideStore,
   Entity,
   ISystem,
   PlayerTag,
@@ -78,6 +86,11 @@ export default class ChaserStateSystem implements ISystem {
           Ecs.addComponent(world, VelocityStore, chaser);
           VelocityStore.x[chaser] = 0;
           VelocityStore.y[chaser] = 0;
+
+          Ecs.addComponent(world, CollideStore, chaser);
+          CollideStore.targetKind[chaser] = EntityKind.Avoider;
+          CollideStore.hitRadius[chaser] = ObjectSize.ChaserRadius;
+          CollideStore.hitStateToTarget[chaser] = AvoiderState.Dead;
 
           const bodySprite = createSprite(
             this._textureByKind[TextureKind.ChaserBody] as Texture
