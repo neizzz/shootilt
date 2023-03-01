@@ -1,22 +1,19 @@
-import EventBus from '@game/EventBus';
 import { BitmapFont, BitmapText, Container } from 'pixi.js';
+
+import * as Ecs from 'bitecs';
 
 import { GameContext } from '@game';
 
-import { GameEvent } from '@game/models/event';
-import { ISystem } from '@game/models/system';
-
-import { TrackerStateValue } from './../states/tracker';
+import { ChaserTag, ISystem } from '@game/models/ecs';
 
 export default class ScoreSystem implements ISystem {
   private _score = 0;
   private _scoreText: BitmapText;
   private _intervalTimer: ReturnType<typeof setInterval>;
-  private _eventBus: EventBus;
 
-  private _boundTrackerDeadListener = this._trackerDeadListener.bind(this);
+  private _queryExitedChasers = Ecs.exitQuery(Ecs.defineQuery([ChaserTag]));
 
-  constructor(stage: Container, eventBus: EventBus) {
+  constructor(stage: Container) {
     /** TODO: 외부 ttf를 BitmapFont로 로드하는 거는 좀더 리서치 필요 */
     BitmapFont.from(
       __SCORE_FONT_NAME__,
@@ -41,30 +38,20 @@ export default class ScoreSystem implements ISystem {
     this._intervalTimer = setInterval(() => {
       this._addScore(1); // TODO: apply factor
     }, 1000);
-
-    this._eventBus = eventBus;
-    this._eventBus.register(GameEvent.Dead, this._boundTrackerDeadListener);
   }
 
   destroy() {
     clearInterval(this._intervalTimer);
-    this._eventBus.unregister(GameEvent.Dead, this._boundTrackerDeadListener);
   }
 
-  update() {
+  update(world: Ecs.IWorld) {
+    this._addScore(3 * this._queryExitedChasers(world).length);
     this._scoreText.text = this._score.toString();
     this._scoreText.updateText();
   }
 
-  private _trackerDeadListener({ stateValue }: { stateValue?: string }) {
-    if (stateValue === TrackerStateValue.Tracking) {
-      this._addScore(3); // TODO: apply factor
-    }
-  }
-
   private _addScore(scoreToAdd: number) {
     this._score += scoreToAdd;
-    this.update();
   }
 }
 

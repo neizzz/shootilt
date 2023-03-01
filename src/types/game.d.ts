@@ -1,11 +1,19 @@
+import AssetStore from '@game/AssetStore';
+import EventBus from '@game/EventBus';
+import { Renderer } from 'pixi.js';
+
 export {};
 
 declare global {
-  type SimplePoint = {
-    x: number;
-    y: number;
-  };
+  interface Window {
+    GameContext: {
+      VIEW_WIDTH: number;
+      VIEW_HEIGHT: number;
+      MAX_ENTITY_COUNT: 512;
+      renderer?: Renderer;
+    };
+  }
 
-  type CachedKeysRef<T> = { current: T[] };
+  type Key = string | number | symbol;
 }
 

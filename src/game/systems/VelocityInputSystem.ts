@@ -1,14 +1,23 @@
-import { IComponent, VelocityComponent } from '@game/models/component';
-import { ISystem } from '@game/models/system';
+import * as Ecs from 'bitecs';
+
+import {
+  AvoiderTag,
+  EquippedBulletReference,
+  ISystem,
+  PlayerTag,
+  VelocityStore,
+  VelocityType,
+} from '@game/models/ecs';
 
 export default class VelocityInputSystem implements ISystem {
   private _boundDeviceOrientationListener =
     this._deviceOrientationListener.bind(this);
-  private _targetVelocityComponent: VelocityComponent;
 
-  constructor(targetVelocityComponent: VelocityComponent) {
-    this._targetVelocityComponent = targetVelocityComponent;
+  private _queryPlayer = Ecs.defineQuery([PlayerTag]);
 
+  private _latestOrientation?: VelocityType;
+
+  constructor() {
     window.addEventListener(
       'deviceorientation',
       this._boundDeviceOrientationListener
@@ -22,10 +31,18 @@ export default class VelocityInputSystem implements ISystem {
     );
   }
 
-  update(delta: number, { vx, vy }: Omit<VelocityComponent, keyof IComponent>) {
-    if (!this._targetVelocityComponent.inUse) return;
-    this._targetVelocityComponent.vx = vx;
-    this._targetVelocityComponent.vy = vy;
+  update(world: Ecs.IWorld) {
+    if (!this._latestOrientation) return;
+
+    const player = this._queryPlayer(world)[0];
+    VelocityStore.x[player] = this._latestOrientation.x;
+    VelocityStore.y[player] = this._latestOrientation.y;
+
+    const playerBullet = EquippedBulletReference.bullet[player];
+    VelocityStore.x[playerBullet] = this._latestOrientation.x;
+    VelocityStore.y[playerBullet] = this._latestOrientation.y;
+
+    this._latestOrientation = undefined;
   }
 
   private _deviceOrientationListener(e: DeviceOrientationEvent) {
@@ -38,13 +55,10 @@ export default class VelocityInputSystem implements ISystem {
       throw new Error('device orientation event is not supported');
     }
 
-    this.update(NaN, this._smoother({ beta, gamma }));
+    this._latestOrientation = this._smoother({ beta, gamma });
   }
 
-  private _smoother(params: {
-    beta: number;
-    gamma: number;
-  }): Omit<VelocityComponent, keyof IComponent> {
+  private _smoother(params: { beta: number; gamma: number }): VelocityType {
     const MAX_ANGLE_VALUE = 30;
     const MIN_ANGLE_VALUE = -30;
     const MAX_VELOCITY = 5; // pixel per frame
@@ -57,8 +71,8 @@ export default class VelocityInputSystem implements ISystem {
     gamma = Math.min(MAX_ANGLE_VALUE, gamma);
 
     return {
-      vx: (beta * MAX_VELOCITY) / MAX_ANGLE_VALUE,
-      vy: (-1 * (gamma * MAX_VELOCITY)) / MAX_ANGLE_VALUE,
+      x: (beta * MAX_VELOCITY) / MAX_ANGLE_VALUE,
+      y: (-1 * (gamma * MAX_VELOCITY)) / MAX_ANGLE_VALUE,
     };
   }
 }

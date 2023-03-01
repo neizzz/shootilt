@@ -1,31 +1,30 @@
 import { Emitter, upgradeConfig } from '@pixi/particle-emitter';
 import { ParticleContainer, Texture } from 'pixi.js';
 
-import { PositionComponent } from '@game/models/component';
-import { ISystem } from '@game/models/system';
+import { Entity, ISystem, PositionStore } from '@game/models/ecs';
 
 export default class TrailEffectSystem implements ISystem {
-  private _targetPositionComponent: PositionComponent;
+  private _target: Entity;
   private _prevNow: number;
   private _emitter: Emitter;
 
   constructor(
-    targetPositionComponent: PositionComponent,
+    target: Entity,
     particleTexture: Texture,
     container: ParticleContainer
   ) {
-    this._targetPositionComponent = targetPositionComponent;
+    this._target = target;
     this._emitter = new Emitter(
       container,
       upgradeConfig(
         {
           alpha: {
-            start: 0.8,
-            end: 0.15,
+            start: 0.1,
+            end: 0.02,
           },
           scale: {
             start: 1,
-            end: 0.2,
+            end: 0.8,
             minimumScaleMultiplier: 1,
           },
           color: {
@@ -76,8 +75,10 @@ export default class TrailEffectSystem implements ISystem {
 
   update() {
     const now = performance.now();
-    const { x, y } = this._targetPositionComponent;
-    this._emitter.updateOwnerPos(x, y);
+    this._emitter.updateOwnerPos(
+      PositionStore.x[this._target],
+      PositionStore.y[this._target]
+    );
     this._emitter.update((now - this._prevNow) * 0.001);
     this._prevNow = now;
   }

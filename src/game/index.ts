@@ -1,44 +1,34 @@
-import EntityManager from '@game/EntityManager';
-import EventBus from '@game/EventBus';
-import {
-  Application,
-  Container,
-  Graphics,
-  ParticleContainer,
-  Texture,
-} from 'pixi.js';
+import { Application, Container, ParticleContainer, Renderer } from 'pixi.js';
 
-import {
-  CollideComponent,
-  ComponentKind,
-  PartialComponents,
-  PositionComponent,
-  StateComponent,
-  VelocityComponent,
-} from '@game/models/component';
-import { ComponentPools } from '@game/models/component';
-import { EntityKind } from '@game/models/entity';
-import { GameEvent } from '@game/models/event';
-import { ISystem } from '@game/models/system';
+import * as Ecs from 'bitecs';
 
+import { ISystem } from '@game/models/ecs';
+
+import ChaseSystem from '@game/systems/ChaseSystem';
 import CollideSystem from '@game/systems/CollideSystem';
-import DebugCollideAreaViewSystem from '@game/systems/DebugCollideAreaViewSystem';
+import DebugDashboardSystem from '@game/systems/DebugDashboardSystem';
+import DebugVelocityInputSystem from '@game/systems/DebugVelocityInputSystem';
 import MoveSystem from '@game/systems/MoveSystem';
-import RenderSystem from '@game/systems/RenderSystem';
+import ScoreSystem from '@game/systems/ScoreSystem';
 import ShootingSystem from '@game/systems/ShootingSystem';
-import TrackSystem from '@game/systems/TrackSystem';
-import TrailEffectSystem from '@game/systems/TrailEffectSystem';
 import VelocityInputSystem from '@game/systems/VelocityInputSystem';
 import WaveSystem from '@game/systems/WaveSystem';
 
-import { increasingKeys } from '@game/utils/array';
-import { SealedArray } from '@game/utils/container';
-import { generateTexture } from '@game/utils/in-game';
 import { now } from '@game/utils/time';
 
-import DebugDashboardSystem from './systems/DebugDashboardSystem';
-import DebugVelocityInputSystem from './systems/DebugVelocityInputSystem';
-import ScoreSystem from './systems/ScoreSystem';
+import { ComponentKind } from './models/constant';
+import AvoiderStateSystem from './systems/AvoiderStateSystem';
+import BulletStateSystem from './systems/BulletStateSystem';
+import ChaserStateSystem from './systems/ChaserStateSystem';
+import SinglePlaySystem from './systems/SinglePlaySystem';
+import { createAvoider } from './utils/create-entity';
+
+window.GameContext = {
+  VIEW_WIDTH: window.innerWidth,
+  VIEW_HEIGHT: window.innerHeight,
+  MAX_ENTITY_COUNT: 512,
+  renderer: undefined,
+};
 
 export const GameContext = window.GameContext;
 
@@ -47,25 +37,24 @@ type GameInitOptions = {
 };
 
 export default class Game {
+  // TODO: IWorld 검토, 상속받아서 GameContext대용으로 쓸 수 있을 듯
+  private _world!: Ecs.IWorld;
+
   private _gameApp: Application;
   private _stage: Container;
-  private _shadowStage: Container;
+  private _backStage: Container;
   private _particleContainer: ParticleContainer;
-  private _textureMaps!: Partial<
-    Record<EntityKind, Record<string, Texture | Texture[]>>
-  >;
-  private _eventBus!: EventBus;
-  private _entityManager!: EntityManager;
   private _systems: ISystem[] = [];
   private _nonUpdateSystems: ISystem[] = [];
   private _timeInfo: {
     start: number;
   } = { start: NaN };
 
-  private _componentPools!: ComponentPools;
   private _onEndRound!: () => void;
 
   constructor({ onEndRound }: GameInitOptions) {
+    console.debug('Game instance initialized.');
+
     this._onEndRound = onEndRound;
     this._gameApp = new Application({
       width: GameContext.VIEW_WIDTH,
@@ -73,18 +62,18 @@ export default class Game {
       backgroundColor: 0x000000,
       resolution: window.devicePixelRatio,
       autoDensity: true,
-      antialias: false,
       powerPreference: 'high-performance',
+      antialias: false,
       autoStart: false,
     });
 
-    this._shadowStage = new Container();
+    this._backStage = new Container();
     this._particleContainer = new ParticleContainer();
     this._stage = new Container();
     this._stage.interactive = true;
     this._stage.hitArea = this._gameApp.screen;
     this._gameApp.stage.addChild(
-      this._shadowStage,
+      this._backStage,
       this._particleContainer,
       this._stage
     );
@@ -95,24 +84,14 @@ export default class Game {
      * PC(m1 pro기준)에서는 FPS변동이 심해짐 */
     this._gameApp.ticker.minFPS = 30;
     this._gameApp.ticker.maxFPS = 60;
-    window.GameContext.renderer = this._gameApp.renderer;
 
-    this._initTextureMaps();
+    GameContext.renderer = this._gameApp.renderer as Renderer;
 
-    this._gameApp.ticker.add((delta) => {
-      this._systems.forEach((system) => system.update(delta)); // convert to second
-    });
-  }
-
-  init() {
-    this._initComponentsPool();
-
-    this._entityManager = new EntityManager(this);
-    this._eventBus = new EventBus(
-      this,
-      this._entityManager,
-      this._componentPools[ComponentKind.State]
-    );
+    this._gameApp.ticker
+      .add((delta) => {
+        this._systems.forEach((system) => system.update(this._world, delta));
+      })
+      .stop();
   }
 
   appendViewTo(parentEl: HTMLDivElement) {
@@ -120,71 +99,36 @@ export default class Game {
   }
 
   startRound() {
+    this._world = Ecs.createWorld(GameContext.MAX_ENTITY_COUNT);
     this._timeInfo = Object.freeze({ start: now() });
 
-    /** create the player's avoider */
-    const playerEntity = this._entityManager.createEntity(EntityKind.Avoider);
-    this._entityManager.setPlayerEntity(playerEntity);
+    /** create the player's avoider + bullet */
+    createAvoider(this._world, {
+      [ComponentKind.Position]: {
+        x: GameContext.VIEW_WIDTH / 2,
+        y: GameContext.VIEW_HEIGHT / 2,
+      },
+    });
 
     /** update */
-    this._systems.push(
-      new WaveSystem(
-        (positionX: number, positionY: number) =>
-          this._entityManager.createEntity(EntityKind.Tracker, {
-            [ComponentKind.Position]: { x: positionX, y: positionY },
-          }),
-        () => this._entityManager.getTrackerCount(),
-        this.getStartTime.bind(this)
-      ),
-      new TrackSystem(
-        playerEntity,
-        this._componentPools[ComponentKind.State],
-        this._componentPools[ComponentKind.Position],
-        this._componentPools[ComponentKind.Velocity],
-        this._componentPools[ComponentKind.Collide]
-      ),
-      new MoveSystem(
-        this._eventBus,
-        this._componentPools[ComponentKind.Position],
-        this._componentPools[ComponentKind.Velocity]
-      ),
-      new CollideSystem(
-        this._eventBus,
-        this._componentPools[ComponentKind.Collide],
-        this._componentPools[ComponentKind.Position]
-      ),
-      new DebugCollideAreaViewSystem(
-        this.getStage(),
-        this._componentPools[ComponentKind.Collide],
-        this._componentPools[ComponentKind.Position]
-      ),
+    this._systems = [
       new DebugDashboardSystem(this._gameApp),
-      new RenderSystem(
-        this._componentPools[ComponentKind.Position],
-        this._componentPools[ComponentKind.State]
-      ),
-      new TrailEffectSystem(
-        this._componentPools[ComponentKind.Position][playerEntity],
-        this._textureMaps[EntityKind.Avoider]!.Body as Texture,
-        this._particleContainer
-      ),
-      new ShootingSystem(
-        this.getStage(),
-        this._componentPools[ComponentKind.Position][playerEntity],
-        (initComponents: PartialComponents) => {
-          this._entityManager.createEntity(EntityKind.Bullet, initComponents);
-        }
-      )
-    );
+      new WaveSystem(this.getStartTime.bind(this)),
+      new ChaseSystem(),
+      new MoveSystem(),
+      new CollideSystem(),
+      new ScoreSystem(this.getStage()),
+      new ShootingSystem(this.getStage()),
+      new AvoiderStateSystem(this.getStage(), this.getBackStage()),
+      new ChaserStateSystem(this.getStage(), this.getBackStage()),
+      new BulletStateSystem(this.getStage(), this.getParticleContainer()),
+      new SinglePlaySystem(this),
+      new ScoreSystem(this.getStage()),
+    ];
 
     this._nonUpdateSystems = [
-      new DebugVelocityInputSystem(
-        this._componentPools[ComponentKind.Velocity][playerEntity]
-      ),
-      new VelocityInputSystem(
-        this._componentPools[ComponentKind.Velocity][playerEntity]
-      ),
-      new ScoreSystem(this._stage!, this._eventBus),
+      new DebugVelocityInputSystem(this._world),
+      new VelocityInputSystem(),
     ];
 
     this._startGameLoop();
@@ -192,7 +136,6 @@ export default class Game {
 
   restartRound() {
     this.destroy();
-    this.init();
     this.startRound();
   }
 
@@ -202,37 +145,31 @@ export default class Game {
   }
 
   destroy() {
-    this._stage?.removeChildren();
-    this._systems.forEach((system) => system.destroy?.());
+    console.debug('Game instance destroyed.');
+    this._stage.removeChildren();
+    this._backStage.removeChildren();
+    this._particleContainer.removeChildren();
+    this._systems.forEach((system) => system.destroy?.(this._world));
     this._systems = [];
-    this._nonUpdateSystems.forEach((system) => system.destroy?.());
+    this._nonUpdateSystems.forEach((system) => system.destroy?.(this._world));
     this._nonUpdateSystems = [];
+    Ecs.deleteWorld(this._world);
   }
 
   getStartTime(): number {
     return this._timeInfo.start;
   }
 
-  getComponentPools() {
-    return this._componentPools;
-  }
-
   getStage(): Container {
     return this._stage;
   }
 
-  getShadowStage(): Container {
-    return this._shadowStage;
+  getBackStage(): Container {
+    return this._backStage;
   }
 
-  getTextureMap(kind: EntityKind): Record<string, Texture | Texture[]> {
-    const textureMap = this._textureMaps[kind];
-
-    if (textureMap === undefined) {
-      throw new Error('not existing texture map');
-    } else {
-      return textureMap;
-    }
+  getParticleContainer(): ParticleContainer {
+    return this._particleContainer;
   }
 
   private _startGameLoop() {
@@ -241,80 +178,6 @@ export default class Game {
 
   private _stopGameLoop() {
     this._gameApp.ticker.stop();
-  }
-
-  private _initTextureMaps() {
-    this._textureMaps = {
-      [EntityKind.Avoider]: {
-        Body: generateTexture(
-          new Graphics().beginFill(0x495c83).drawCircle(0, 0, 6).endFill()
-        ),
-      },
-      [EntityKind.Tracker]: {
-        SpawningBody: increasingKeys(60).map((num) => {
-          const currentGraphics = new Graphics();
-          currentGraphics.beginFill(0xeb455f);
-          currentGraphics.drawCircle(0, 0, 0.1 * num);
-          currentGraphics.endFill();
-          currentGraphics.cacheAsBitmap = true;
-          return generateTexture(currentGraphics);
-        }),
-        Shadow: (() => {
-          const graphics = new Graphics()
-            .beginFill(0xfcffe7)
-            .drawCircle(0, 0, 8)
-            .endFill();
-          graphics.cacheAsBitmap = true;
-          return generateTexture(graphics);
-        })(),
-      },
-      [EntityKind.Bullet]: {
-        BasicBody: Texture.from(`${__IMAGE_ASSET_DIR__}/fire-bullet.png`),
-        FireBody: Texture.from(`${__IMAGE_ASSET_DIR__}/fire-bullet.png`),
-        IceBody: Texture.from(`${__IMAGE_ASSET_DIR__}/ice-bullet.png`),
-      },
-    };
-  }
-
-  private _initComponentsPool() {
-    this._componentPools = {
-      [ComponentKind.Velocity]: SealedArray.from<VelocityComponent>(
-        { length: GameContext.MAX_ENTITY_COUNT },
-        () => ({
-          inUse: false,
-          vx: NaN,
-          vy: NaN,
-        })
-      ),
-      [ComponentKind.Position]: SealedArray.from<PositionComponent>(
-        { length: GameContext.MAX_ENTITY_COUNT },
-        () => ({
-          inUse: false,
-          x: NaN,
-          y: NaN,
-          outsideStageBehavior: 'none',
-        })
-      ),
-      [ComponentKind.State]: SealedArray.from<StateComponent>(
-        { length: GameContext.MAX_ENTITY_COUNT },
-        () => ({
-          inUse: false,
-          state: undefined,
-          rotation: 0,
-          sprites: [],
-        })
-      ),
-      [ComponentKind.Collide]: SealedArray.from<CollideComponent>(
-        { length: GameContext.MAX_ENTITY_COUNT },
-        () => ({
-          inUse: false,
-          distFromCenter: { x: NaN, y: NaN },
-          radius: NaN,
-          targetEntitiesRef: { current: [] },
-          eventToTarget: GameEvent.None,
-        })
-      ),
-    };
   }
 }
 
