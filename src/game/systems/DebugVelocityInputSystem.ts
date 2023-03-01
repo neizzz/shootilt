@@ -1,8 +1,8 @@
 import * as Ecs from 'bitecs';
 
 import {
-  AvoiderTag,
   Entity,
+  EquippedBulletReference,
   ISystem,
   PlayerTag,
   VelocityStore,
@@ -57,7 +57,7 @@ export default class DebugVelocityInputSystem implements ISystem {
   private _getTargets(world: Ecs.IWorld): Entity[] {
     const player = this._queryPlayer(world)[0];
     if (Ecs.hasComponent(world, VelocityStore, player)) {
-      return [player, AvoiderTag.bullet[player]] as Entity[];
+      return [player, EquippedBulletReference.bullet[player]] as Entity[];
     } else {
       return [];
     }

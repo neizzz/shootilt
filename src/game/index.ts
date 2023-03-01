@@ -1,5 +1,6 @@
-import * as Ecs from 'bitecs';
 import { Application, Container, ParticleContainer, Renderer } from 'pixi.js';
+
+import * as Ecs from 'bitecs';
 
 import { ISystem } from '@game/models/ecs';
 

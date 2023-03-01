@@ -2,13 +2,15 @@ import { Texture } from '@pixi/core';
 import { Container } from '@pixi/display';
 import { Graphics } from '@pixi/graphics';
 import { AnimatedSprite } from '@pixi/sprite-animated';
-import * as Ecs from 'bitecs';
 import { ParticleContainer, Sprite } from 'pixi.js';
+
+import * as Ecs from 'bitecs';
 
 import {
   AvoiderState,
   BulletState,
   ObjectSize,
+  OutsideStageBehavior,
   TextureKind,
 } from '@game/models/constant';
 import {
@@ -16,6 +18,7 @@ import {
   BulletTag,
   Entity,
   ISystem,
+  OutsideStageBehaviorStore,
   PositionStore,
 } from '@game/models/ecs';
 
@@ -65,11 +68,11 @@ export default class BulletStateSystem implements ISystem {
       const loadingSprite = createAnimatedSprite(
         this._textureByKind[TextureKind.BulletLoadingAnimation] as Texture[],
         () => {
-          BulletTag.state[bullet] = BulletState.Ready;
           const ownerAvoider = BulletTag.avoider[bullet];
           if (AvoiderTag.state[ownerAvoider] === AvoiderState.Spawning) {
             AvoiderTag.state[ownerAvoider] = AvoiderState.Avoiding;
           }
+          BulletTag.state[bullet] = BulletState.Ready;
         }
       );
       this._spriteByBullet.add(bullet as Entity, loadingSprite);
@@ -101,7 +104,8 @@ export default class BulletStateSystem implements ISystem {
 
         case BulletState.Shooted:
           /** TODO: Collide setting */
-          break;
+          OutsideStageBehaviorStore.behavior[bullet] =
+            OutsideStageBehavior.Remove;
       }
     });
 

@@ -24,6 +24,8 @@ export type Entity = number & { entity: any };
  * ✅ if add new component, modify 'ComponentKind' enum in 'models/constant.ts'
  */
 export type ComponentTypes = {
+  [ComponentKind.AvoiderTag]?: AvoiderTagType;
+  [ComponentKind.BulletTag]?: BulletTagType;
   [ComponentKind.Position]?: PositionType;
   [ComponentKind.Velocity]?: VelocityType;
   [ComponentKind.Chase]?: ChaseType;
@@ -35,11 +37,25 @@ export const PlayerTag = Ecs.defineComponent();
 
 export const AvoiderTag = Ecs.defineComponent({
   state: Ecs.Types.ui8,
-  bullet: Ecs.Types.eid,
 });
 export type AvoiderTagType = {
   state: AvoiderState;
+};
+
+export const EquippedBulletReference = Ecs.defineComponent({
+  bullet: Ecs.Types.eid,
+});
+export type EquippedBulletReferenceType = {
   bullet: Entity;
+};
+
+export const BulletTag = Ecs.defineComponent({
+  state: Ecs.Types.ui8,
+  avoider: Ecs.Types.eid /** NOTE: 생성 이후로 안바뀜 */,
+});
+export type BulletTagType = {
+  state: BulletState;
+  avoider: Entity;
 };
 
 export const ChaserTag = Ecs.defineComponent({
@@ -48,22 +64,6 @@ export const ChaserTag = Ecs.defineComponent({
 export type ChaserTagType = {
   state: ChaserState;
 };
-
-export const BulletTag = Ecs.defineComponent({
-  state: Ecs.Types.ui8,
-  avoider: Ecs.Types.eid,
-});
-export type BulletTagType = {
-  state: BulletState;
-  avoider: Entity;
-};
-
-// export const StateStore = Ecs.defineComponent({
-
-// });
-// export type StateType = {
-//   state: State;
-// };
 
 export const PositionStore = Ecs.defineComponent({
   x: Ecs.Types.f32,
@@ -106,25 +106,12 @@ export type CollideType = {
   hitRadius: number;
 };
 
-// export const RenderStore = Ecs.defineComponent({
-//   texture: Ecs.Types.ui8,
-// });
-// export type RenderType = {
-//   texture: TextureKind;
-// };
-
 export const RotateStore = Ecs.defineComponent({
   angle: Ecs.Types.ui8 /** clockwise radian from y axis */,
 });
 export type RotateType = {
   angle: number;
 };
-
-// export const StateStore = Ecs.defineComponent({
-//   fromState: State,
-//   state: State,
-//   toState: State,
-// });
 
 /**
  * System

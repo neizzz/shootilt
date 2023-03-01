@@ -38,6 +38,7 @@
     "importOrder": [
       "^@client/(.*)$",
       "^@assets/(.*)$",
+      "^bitecs$",
       "^@game$",
       "^@game/models/(.*)$",
       "^@game/states/(.*)$",
@@ -49,3 +50,4 @@
     "importOrderSortSpecifiers": true
   }
 }
+

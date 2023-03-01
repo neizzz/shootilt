@@ -1,13 +1,13 @@
 import ShootingDragManager from '@game/ShootingDragManager';
-import * as Ecs from 'bitecs';
 import { Container, ISystem } from 'pixi.js';
 
-import { GameContext } from '@game';
+import * as Ecs from 'bitecs';
 
-import { BulletState, ComponentKind } from '@game/models/constant';
+import { BulletState } from '@game/models/constant';
 import {
-  AvoiderTag,
   BulletTag,
+  Entity,
+  EquippedBulletReference,
   PlayerTag,
   PositionStore,
   VelocityStore,
@@ -41,8 +41,6 @@ export default class ShootingSystem implements ISystem {
     this._shootContext.velocity = velocity;
   }
 
-  reload() {}
-
   destroy() {
     this._shootingDragManager.destroy();
   }
@@ -58,18 +56,18 @@ export default class ShootingSystem implements ISystem {
     if (this._shootContext.requested) {
       this._shootContext.requested = false;
       const { x, y } = this._shootContext.velocity as VelocityType;
+      const bullet = EquippedBulletReference.bullet[player];
 
-      const bullet = AvoiderTag.bullet[player];
+      if (BulletTag.state[bullet] !== BulletState.Ready) return;
+
       BulletTag.state[bullet] = BulletState.Shooted;
       VelocityStore.x[bullet] = x;
       VelocityStore.y[bullet] = y;
 
-      AvoiderTag.bullet[player] = createBullet(world, {
-        [ComponentKind.Position]: {
-          x: PositionStore.x[player],
-          y: PositionStore.y[player],
-        },
-      });
+      EquippedBulletReference.bullet[player] = createBullet(
+        world,
+        player as Entity
+      );
     }
   }
 }

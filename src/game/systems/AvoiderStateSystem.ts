@@ -2,8 +2,9 @@ import { Texture } from '@pixi/core';
 import { Container } from '@pixi/display';
 import { Graphics } from '@pixi/graphics';
 import { AnimatedSprite } from '@pixi/sprite-animated';
-import * as Ecs from 'bitecs';
 import { Sprite } from 'pixi.js';
+
+import * as Ecs from 'bitecs';
 
 import { AvoiderState, ObjectSize, TextureKind } from '@game/models/constant';
 import {

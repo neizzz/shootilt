@@ -24,8 +24,6 @@ export default class ShootingDragManager {
     rotation: number;
   };
 
-  // private _currentBulletEntity?: Entity;
-
   constructor(stage: Container, shoot: (velocity: VelocityType) => void) {
     this._stage = stage;
     this._shoot = shoot;
@@ -117,26 +115,10 @@ export default class ShootingDragManager {
 
   private _dragEnd(e: InteractionEvent) {
     if (!this._dragContext) return;
-    // if (!this._currentBulletEntity) {
-    //   this._reset();
-    //   /** TODO: not yet bullet sound */
-    //   return;
-    // }
 
     const d = this._sightLineGraphics!.pivot.y;
     const theta = this._sightLineGraphics!.rotation;
     const speed = 1 + ((MAX_BULLET_SPEED - 1) * d) / MAX_SIGHT_LINE_LENGTH;
-
-    // this._eventBus.dispatchToEntity(
-    //   GameEvent.BulletShoot,
-    //   this._currentBulletEntity,
-    //   { /** NOTE: 꼭 필요한 부분(속도 주입) */
-    //     velocityComponent: {
-    //       vx: speed * Math.sin(theta),
-    //       vy: -1 * speed * Math.cos(theta),
-    //     },
-    //   }
-    // );
 
     this._shoot({
       x: speed * Math.sin(theta),
