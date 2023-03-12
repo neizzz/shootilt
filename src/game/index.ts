@@ -26,7 +26,7 @@ import { createAvoider } from './utils/create-entity';
 window.GameContext = {
   VIEW_WIDTH: window.innerWidth,
   VIEW_HEIGHT: window.innerHeight,
-  MAX_ENTITY_COUNT: 512,
+  MAX_ENTITY_COUNT: 1024,
   renderer: undefined,
 };
 
@@ -113,23 +113,21 @@ export default class Game {
     /** update */
     this._systems = [
       new DebugDashboardSystem(this._gameApp),
-      new WaveSystem(this.getStartTime.bind(this)),
+      new WaveSystem(this.getStartTime()),
       new ChaseSystem(),
       new MoveSystem(),
       new CollideSystem(),
       new ScoreSystem(this.getStage()),
       new ShootingSystem(this.getStage()),
-      new AvoiderStateSystem(this.getStage(), this.getBackStage()),
       new ChaserStateSystem(this.getStage(), this.getBackStage()),
+      new AvoiderStateSystem(this.getStage(), this.getBackStage()),
       new BulletStateSystem(this.getStage(), this.getParticleContainer()),
       new SinglePlaySystem(this),
       new ScoreSystem(this.getStage()),
-    ];
-
-    this._nonUpdateSystems = [
-      new DebugVelocityInputSystem(this._world),
       new VelocityInputSystem(),
     ];
+
+    this._nonUpdateSystems = [new DebugVelocityInputSystem(this._world)];
 
     this._startGameLoop();
   }

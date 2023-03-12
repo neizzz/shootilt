@@ -9,7 +9,7 @@ declare global {
     GameContext: {
       VIEW_WIDTH: number;
       VIEW_HEIGHT: number;
-      MAX_ENTITY_COUNT: 512;
+      MAX_ENTITY_COUNT: number;
       renderer?: Renderer;
     };
   }

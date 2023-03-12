@@ -10,6 +10,7 @@ import {
   ChaserState,
   EntityKind,
   ObjectSize,
+  OutsideStageBehavior,
   TextureKind,
 } from '@game/models/constant';
 import {
@@ -17,7 +18,9 @@ import {
   ChaserTag,
   CollideStore,
   Entity,
+  FutureVelocityStore,
   ISystem,
+  OutsideStageBehaviorStore,
   PlayerTag,
   PositionStore,
   VelocityStore,
@@ -30,6 +33,8 @@ import {
   createSprite,
   generateTexture,
 } from '@game/utils/in-game';
+
+import { OutsideStageBehaviorType } from './../models/ecs';
 
 type ChaserTextureKind =
   | TextureKind.ChaserBody
@@ -67,7 +72,11 @@ export default class ChaserStateSystem implements ISystem {
       const spawningSprite = createAnimatedSprite(
         this._textureByKind[TextureKind.ChaserSpawningAnimation] as Texture[],
         () => {
-          ChaserTag.state[chaser] = ChaserState.Chasing;
+          if (ChaserTag.mutant[chaser]) {
+            ChaserTag.state[chaser] = ChaserState.Mutated;
+          } else {
+            ChaserTag.state[chaser] = ChaserState.Chasing;
+          }
         }
       );
       this._spriteByEntity.add(chaser as Entity, spawningSprite);
@@ -76,35 +85,27 @@ export default class ChaserStateSystem implements ISystem {
 
     this._queryChangedChasers(world).forEach((chaser) => {
       switch (ChaserTag.state[chaser]) {
-        case ChaserState.Spawning:
-          throw new Error('not reached');
+        // case ChaserState.Spawning:
+        //   throw new Error('not reached');
+
+        case ChaserState.Mutated:
+          Ecs.addComponent(world, VelocityStore, chaser);
+          Ecs.addComponent(world, OutsideStageBehaviorStore, chaser);
+          VelocityStore.x[chaser] = FutureVelocityStore.x[chaser];
+          VelocityStore.y[chaser] = FutureVelocityStore.y[chaser];
+          OutsideStageBehaviorStore.behavior[chaser] =
+            OutsideStageBehavior.Remove;
+          Ecs.removeComponent(world, FutureVelocityStore, chaser);
+          this._commonActivatedRoutine(world, chaser as Entity);
+          break;
 
         case ChaserState.Chasing:
           Ecs.addComponent(world, ChaseStore, chaser);
-          ChaseStore.target[chaser] = this._queryPlayer(world)[0];
-
           Ecs.addComponent(world, VelocityStore, chaser);
+          ChaseStore.target[chaser] = this._queryPlayer(world)[0];
           VelocityStore.x[chaser] = 0;
           VelocityStore.y[chaser] = 0;
-
-          Ecs.addComponent(world, CollideStore, chaser);
-          CollideStore.targetKind[chaser] = EntityKind.Avoider;
-          CollideStore.hitRadius[chaser] = ObjectSize.ChaserRadius;
-          CollideStore.hitStateToTarget[chaser] = AvoiderState.Dead;
-
-          const bodySprite = createSprite(
-            this._textureByKind[TextureKind.ChaserBody] as Texture
-          );
-          const shadowSprite = createSprite(
-            this._textureByKind[TextureKind.ChaserShadow] as Texture
-          );
-
-          this._spriteByEntity.remove(chaser as Entity); // remove spawning sprite
-          this._spriteByEntity.add(chaser as Entity, bodySprite);
-          this._stage.addChild(bodySprite);
-
-          this._shadowSpriteByEntity.add(chaser as Entity, shadowSprite);
-          this._backStage.addChild(shadowSprite);
+          this._commonActivatedRoutine(world, chaser as Entity);
           break;
 
         case ChaserState.Dead:
@@ -132,6 +133,27 @@ export default class ChaserStateSystem implements ISystem {
       shadowSprite.x = x;
       shadowSprite.y = y;
     });
+  }
+
+  private _commonActivatedRoutine(world: Ecs.IWorld, chaser: Entity) {
+    Ecs.addComponent(world, CollideStore, chaser);
+    CollideStore.targetKind[chaser] = EntityKind.Avoider;
+    CollideStore.hitRadius[chaser] = ObjectSize.ChaserRadius;
+    CollideStore.hitStateToTarget[chaser] = AvoiderState.Dead;
+
+    const bodySprite = createSprite(
+      this._textureByKind[TextureKind.ChaserBody] as Texture
+    );
+    const shadowSprite = createSprite(
+      this._textureByKind[TextureKind.ChaserShadow] as Texture
+    );
+
+    this._spriteByEntity.remove(chaser as Entity); // remove spawning sprite
+    this._spriteByEntity.add(chaser as Entity, bodySprite);
+    this._stage.addChild(bodySprite);
+
+    this._shadowSpriteByEntity.add(chaser as Entity, shadowSprite);
+    this._backStage.addChild(shadowSprite);
   }
 
   private _initTextures() {
