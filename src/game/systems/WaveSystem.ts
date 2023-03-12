@@ -3,12 +3,19 @@ import * as Ecs from 'bitecs';
 import Game, { GameContext } from '@game';
 
 import { ComponentKind } from '@game/models/constant';
-import { ChaseStore, ISystem, PositionType } from '@game/models/ecs';
+import {
+  ChaseStore,
+  ISystem,
+  PositionStore,
+  PositionType,
+} from '@game/models/ecs';
 
 import { createChaser } from '@game/utils/create-entity';
 import { oppositePositionFrom, randomPosition } from '@game/utils/in-game';
 import { rangedRandomNumber } from '@game/utils/math';
 import { now } from '@game/utils/time';
+
+import { AvoiderTag } from './../models/ecs';
 
 // TODO: FIXME: 이건 추후에, DifficultySystem으로 수정가능하게
 const WAVE_INTERVAL = 5000;
@@ -23,6 +30,7 @@ export default class WaveSystem implements ISystem {
   private _waveStage: number;
 
   private _queryChaser = Ecs.defineQuery([ChaseStore]);
+  private _queryAvoider = Ecs.defineQuery([AvoiderTag]);
 
   private _intervalHandlers = new Set<ReturnType<typeof setInterval>>();
 
@@ -44,12 +52,12 @@ export default class WaveSystem implements ISystem {
 
     if (chasers.length > TRACKER_MAX_COUNT) return;
 
-    // const currentAmount = Math.max(
-    //   this._waveStage * WAVE_AMOUNT_UNIT,
-    //   WAVE_MAX_AMOUNT_AT_ONCE
-    // );
+    const currentAmount = Math.max(
+      this._waveStage * WAVE_AMOUNT_UNIT,
+      WAVE_MAX_AMOUNT_AT_ONCE
+    );
     /** DEBUG: */
-    const currentAmount = 1;
+    // const currentAmount = 1;
 
     /** random creation */
     for (let i = 0; i < currentAmount; i++) {
@@ -104,12 +112,25 @@ export default class WaveSystem implements ISystem {
           amount: 10,
           startPoint: randomPosition(),
           locationInterval: {
-            x: -5,
-            y: -5,
+            x: rangedRandomNumber(-5, 5),
+            y: rangedRandomNumber(-5, 5),
           },
           timeInterval: 100,
         });
         break;
+
+      case 5:
+        /** TODO: battle play */
+        const avoider = this._queryAvoider(world)[0];
+        this._createCircleWave(world, {
+          amount: 15,
+          centerPoint: {
+            x: PositionStore.x[avoider],
+            y: PositionStore.y[avoider],
+          },
+          radius: Math.max(40, 100 - this._waveStage),
+          timeInterval: 100,
+        });
     }
 
     this._waveStage++;
@@ -157,6 +178,18 @@ export default class WaveSystem implements ISystem {
   ) {
     const { amount, startPoint, locationInterval, timeInterval } = params;
 
+    if (locationInterval.x >= 0) {
+      locationInterval.x = Math.max(locationInterval.x, 2);
+    } else {
+      locationInterval.x = Math.min(locationInterval.x, -2);
+    }
+
+    if (locationInterval.y >= 0) {
+      locationInterval.y = Math.max(locationInterval.y, 2);
+    } else {
+      locationInterval.y = Math.min(locationInterval.y, -2);
+    }
+
     this._setWaveInterval(
       (currentGenCount) => {
         createChaser(world, {
@@ -174,14 +207,32 @@ export default class WaveSystem implements ISystem {
   private _createCircleWave(
     world: Ecs.IWorld,
     params: {
+      amount: number;
       centerPoint: PositionType;
       radius: number;
       timeInterval: number;
     }
   ) {
-    const { centerPoint, radius, timeInterval } = params;
+    const { amount, centerPoint, radius, timeInterval } = params;
 
-    /** TODO: */
+    const thetaInterval = (2 * Math.PI) / amount;
+
+    this._setWaveInterval(
+      (currentGenCount) => {
+        createChaser(world, {
+          [ComponentKind.Position]: {
+            x:
+              centerPoint.x +
+              radius * Math.cos(currentGenCount * thetaInterval),
+            y:
+              centerPoint.y +
+              radius * Math.sin(currentGenCount * thetaInterval),
+          },
+        });
+      },
+      amount,
+      timeInterval
+    );
   }
 
   /** TODO: */
