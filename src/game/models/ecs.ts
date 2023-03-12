@@ -29,6 +29,7 @@ export type ComponentTypes = {
   [ComponentKind.BulletTag]?: BulletTagType;
   [ComponentKind.Position]?: PositionType;
   [ComponentKind.Velocity]?: VelocityType;
+  [ComponentKind.FutureVelocity]?: VelocityType;
   [ComponentKind.Chase]?: ChaseType;
   [ComponentKind.Collide]?: CollideType;
   [ComponentKind.Rotate]?: RotateType;
@@ -61,9 +62,11 @@ export type BulletTagType = {
 
 export const ChaserTag = Ecs.defineComponent({
   state: Ecs.Types.ui8,
+  mutant: Ecs.Types.ui8,
 });
 export type ChaserTagType = {
   state: ChaserState;
+  mutant: boolean;
 };
 
 export const PositionStore = Ecs.defineComponent({
@@ -76,6 +79,10 @@ export type PositionType = {
 };
 
 export const VelocityStore = Ecs.defineComponent({
+  x: Ecs.Types.f32,
+  y: Ecs.Types.f32,
+});
+export const FutureVelocityStore = Ecs.defineComponent({
   x: Ecs.Types.f32,
   y: Ecs.Types.f32,
 });

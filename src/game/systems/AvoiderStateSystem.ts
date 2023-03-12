@@ -25,6 +25,8 @@ import {
 import ElementByEntityMap from '@game/utils/container/ElementByEntityMap';
 import { createSprite, generateTexture } from '@game/utils/in-game';
 
+import { EquippedBulletReference } from './../models/ecs';
+
 type AvoiderTextureKind = TextureKind.AvoiderBody | TextureKind.AvoiderShadow;
 
 export default class AvoiderStateSystem implements ISystem {
@@ -65,6 +67,11 @@ export default class AvoiderStateSystem implements ISystem {
           throw new Error('not reached');
 
         case AvoiderState.Avoiding:
+          const bullet = EquippedBulletReference.bullet[avoider];
+          Ecs.addComponent(world, VelocityStore, bullet);
+          VelocityStore.x[avoider] = 0;
+          VelocityStore.y[avoider] = 0;
+
           Ecs.addComponent(world, VelocityStore, avoider);
           VelocityStore.x[avoider] = 0;
           VelocityStore.y[avoider] = 0;

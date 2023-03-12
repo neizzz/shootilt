@@ -30,6 +30,14 @@ export const rangedRandomNumber = (min: number, max: number) => {
   return Math.random() * (max - min) + min;
 };
 
+export const randomFlag = () => {
+  return !!Math.floor(Math.random() * 2);
+};
+
+export const randomSignFlag = () => {
+  return randomFlag() ? -1 : 1;
+};
+
 /** NOTE: height > width */
 // export const headCircleCenter = (
 //   width: number,

@@ -19,6 +19,7 @@ export enum ComponentKind {
   BulletTag,
   Position,
   Velocity,
+  FutureVelocity,
   Chase,
   Collide,
   Rotate,
@@ -52,6 +53,7 @@ export enum AvoiderState {
 export enum ChaserState {
   Spawning,
   Chasing,
+  Mutated,
   Dead,
 }
 export enum BulletState {
