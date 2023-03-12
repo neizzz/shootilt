@@ -6,7 +6,7 @@ export const distance = (p1: PositionType, p2: PositionType): number => {
   );
 };
 
-/** calculate theta(radian) based on y-axis */
+/** calculate clock-wise radian based on y-axis */
 export const theta = (base: PositionType, target: PositionType): number => {
   const diffX = target.x - base.x;
   const diffY = target.y - base.y;
@@ -24,6 +24,10 @@ export const theta = (base: PositionType, target: PositionType): number => {
     theta += Math.PI + Math.PI / 2;
   }
   return theta;
+};
+
+export const rangedRandomNumber = (min: number, max: number) => {
+  return Math.random() * (max - min) + min;
 };
 
 /** NOTE: height > width */
