@@ -69,8 +69,8 @@ export default class AvoiderStateSystem implements ISystem {
         case AvoiderState.Avoiding:
           const bullet = EquippedBulletReference.bullet[avoider];
           Ecs.addComponent(world, VelocityStore, bullet);
-          VelocityStore.x[avoider] = 0;
-          VelocityStore.y[avoider] = 0;
+          VelocityStore.x[bullet] = 0;
+          VelocityStore.y[bullet] = 0;
 
           Ecs.addComponent(world, VelocityStore, avoider);
           VelocityStore.x[avoider] = 0;

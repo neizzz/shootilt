@@ -74,6 +74,7 @@ export const createBullet = (world: Ecs.IWorld, avoider: Entity): Entity => {
   PositionStore.x[entity] = PositionStore.x[avoider];
   PositionStore.y[entity] = PositionStore.y[avoider];
   if (Ecs.hasComponent(world, VelocityStore, avoider)) {
+    console.debug('create start bullet');
     Ecs.addComponent(world, VelocityStore, entity);
     VelocityStore.x[entity] = VelocityStore.x[avoider];
     VelocityStore.y[entity] = VelocityStore.y[avoider];
