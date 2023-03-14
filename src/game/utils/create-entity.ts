@@ -5,6 +5,7 @@ import {
   BulletState,
   ChaserState,
   ComponentKind,
+  OutsideStageBehavior,
 } from '@game/models/constant';
 import {
   AvoiderTag,
@@ -13,6 +14,7 @@ import {
   ComponentTypes,
   Entity,
   EquippedBulletReference,
+  OutsideStageBehaviorStore,
   PlayerTag,
   PositionStore,
   VelocityStore,
@@ -31,10 +33,12 @@ export const createAvoider = (
   Ecs.addComponent(world, AvoiderTag, entity);
   Ecs.addComponent(world, EquippedBulletReference, entity);
   Ecs.addComponent(world, PositionStore, entity);
+  Ecs.addComponent(world, OutsideStageBehaviorStore, entity);
   AvoiderTag.state[entity] = AvoiderState.Spawning;
   PositionStore.x[entity] = components[ComponentKind.Position].x;
   PositionStore.y[entity] = components[ComponentKind.Position].y;
   EquippedBulletReference.bullet[entity] = createBullet(world, entity);
+  OutsideStageBehaviorStore.behavior[entity] = OutsideStageBehavior.Block;
   console.debug('create avoider:', entity);
   return entity;
 };

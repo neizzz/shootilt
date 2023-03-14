@@ -99,7 +99,7 @@ export default class Game {
   }
 
   startRound() {
-    this._world = Ecs.createWorld(GameContext.MAX_ENTITY_COUNT);
+    this._world = Ecs.createWorld();
     this._timeInfo = Object.freeze({ start: now() });
 
     /** create the player's avoider + bullet */
