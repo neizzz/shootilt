@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "vite --host",
+    "start": "tsc --noEmit && vite --host",
     "build:dev": "tsc && vite build -m development",
     "build:prod": "tsc && vite build"
   },

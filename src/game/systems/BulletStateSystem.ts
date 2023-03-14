@@ -47,7 +47,10 @@ export default class BulletStateSystem implements ISystem {
 
   private _textureByKind!: Record<BulletTextureKind, Texture | Texture[]>;
   private _spriteByBullet = new ElementByEntityMap<Sprite | AnimatedSprite>();
-  private _trailByBullet = {} as Record<Entity, TrailEffectSystem>;
+  private _trailByBullet = {} as Record<
+    number /** Entity */,
+    TrailEffectSystem
+  >;
 
   private _queryBullets = Ecs.defineQuery([BulletTag]);
   private _queryChangedBullets = Ecs.defineQuery([Ecs.Changed(BulletTag)]);
@@ -109,7 +112,7 @@ export default class BulletStateSystem implements ISystem {
             this._particleContainer
           );
           trailEffectSystem.update();
-          this._trailByBullet[bullet as Entity] = trailEffectSystem;
+          this._trailByBullet[bullet] = trailEffectSystem;
           break;
 
         case BulletState.Shooted:
@@ -134,14 +137,14 @@ export default class BulletStateSystem implements ISystem {
       bodySprite.y = y;
 
       if (BulletTag.state[bullet] !== BulletState.Loading) {
-        this._trailByBullet[bullet as Entity].update();
+        this._trailByBullet[bullet].update();
       }
     });
 
     this._queryExitedBullets(world).forEach((bullet) => {
       this._spriteByBullet.remove(bullet as Entity);
-      this._trailByBullet[bullet as Entity].destroy();
-      delete this._trailByBullet[bullet as Entity];
+      this._trailByBullet[bullet].destroy();
+      delete this._trailByBullet[bullet];
     });
   }
 
