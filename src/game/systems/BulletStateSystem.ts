@@ -128,6 +128,12 @@ export default class BulletStateSystem implements ISystem {
       }
     });
 
+    this._queryExitedBullets(world).forEach((bullet) => {
+      this._spriteByBullet.remove(bullet as Entity);
+      this._trailByBullet[bullet].destroy();
+      delete this._trailByBullet[bullet];
+    });
+
     this._queryBullets(world).forEach((bullet) => {
       const bodySprite = this._spriteByBullet.get(bullet as Entity) as Sprite;
 
@@ -137,14 +143,9 @@ export default class BulletStateSystem implements ISystem {
       bodySprite.y = y;
 
       if (BulletTag.state[bullet] !== BulletState.Loading) {
-        this._trailByBullet[bullet].update();
+        /** FIXME: 총알이 밖으로 나가면서 사라질때 undefined찾조 에러 */
+        this._trailByBullet[bullet]?.update();
       }
-    });
-
-    this._queryExitedBullets(world).forEach((bullet) => {
-      this._spriteByBullet.remove(bullet as Entity);
-      this._trailByBullet[bullet].destroy();
-      delete this._trailByBullet[bullet];
     });
   }
 
