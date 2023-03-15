@@ -77,6 +77,7 @@ export const createBullet = (world: Ecs.IWorld, avoider: Entity): Entity => {
   BulletTag.avoider[entity] = avoider;
   PositionStore.x[entity] = PositionStore.x[avoider];
   PositionStore.y[entity] = PositionStore.y[avoider];
+  /** NOTE: avoider state가 avoiding인지 체크해도 됨 */
   if (Ecs.hasComponent(world, VelocityStore, avoider)) {
     Ecs.addComponent(world, VelocityStore, entity);
     VelocityStore.x[entity] = VelocityStore.x[avoider];

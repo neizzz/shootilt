@@ -87,6 +87,10 @@ export default class ShootingDragManager {
   }
 
   private _dragStart(e: InteractionEvent) {
+    /** NOTE: multi-touch 막기 위함 */
+    this._stage.off('pointerdown', this._dragStart, this);
+    this._stage.on('pointermove', this._dragMove, this);
+
     const { x, y } = e.data.global;
     this._dragContext = {
       startPoint: { x, y },
@@ -95,7 +99,6 @@ export default class ShootingDragManager {
     };
     this._sightLineGraphics = new Graphics();
     this._stage.addChild(this._sightLineGraphics);
-    this._stage.on('pointermove', this._dragMove, this);
   }
 
   private _dragMove(e: InteractionEvent) {
@@ -137,6 +140,7 @@ export default class ShootingDragManager {
       this._dragContext = undefined;
     }
 
+    this._stage.on('pointerdown', this._dragStart, this);
     this._stage.off('pointermove', this._dragMove, this);
   }
 }

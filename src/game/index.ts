@@ -113,15 +113,16 @@ export default class Game {
     /** update */
     this._systems = [
       new DebugDashboardSystem(this._gameApp),
-      new WaveSystem(this.getStartTime()),
+      // new WaveSystem(this.getStartTime()),
       new ChaseSystem(),
       new MoveSystem(),
       new CollideSystem(),
       new ScoreSystem(this.getStage()),
-      new ShootingSystem(this.getStage()),
       new ChaserStateSystem(this.getStage(), this.getBackStage()),
       new AvoiderStateSystem(this.getStage(), this.getBackStage()),
       new BulletStateSystem(this.getStage(), this.getParticleContainer()),
+      /** NOTE: BulletStateSystem보다 뒤에 와야함 */
+      new ShootingSystem(this.getStage()),
       new SinglePlaySystem(this),
       new ScoreSystem(this.getStage()),
       new VelocityInputSystem(),
