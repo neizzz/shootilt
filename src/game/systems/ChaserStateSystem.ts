@@ -34,8 +34,6 @@ import {
   generateTexture,
 } from '@game/utils/in-game';
 
-import { OutsideStageBehaviorType } from './../models/ecs';
-
 type ChaserTextureKind =
   | TextureKind.ChaserBody
   | TextureKind.ChaserShadow
@@ -120,16 +118,18 @@ export default class ChaserStateSystem implements ISystem {
     });
 
     this._queryChasers(world).forEach((chaser) => {
-      const [x, y] = [PositionStore.x[chaser], PositionStore.y[chaser]];
+      if (ChaserTag.state[chaser] === ChaserState.Dead) return;
 
+      const [x, y] = [PositionStore.x[chaser], PositionStore.y[chaser]];
       const bodySprite = this._spriteByEntity.get(chaser as Entity) as Sprite;
       bodySprite.x = x;
       bodySprite.y = y;
+
+      if (ChaserTag.state[chaser] === ChaserState.Spawning) return;
+
       const shadowSprite = this._shadowSpriteByEntity.get(
         chaser as Entity
       ) as Sprite;
-
-      if (ChaserTag.state[chaser] === ChaserState.Spawning) return;
       shadowSprite.x = x;
       shadowSprite.y = y;
     });

@@ -25,7 +25,7 @@ import { AvoiderTag, VelocityType } from './../models/ecs';
 // TODO: FIXME: 이건 추후에, DifficultySystem으로 수정가능하게
 const WAVE_INTERVAL = 5000;
 const WAVE_AMOUNT_UNIT = 3;
-const WAVE_MAX_AMOUNT_AT_ONCE = 36;
+const WAVE_MAX_AMOUNT_AT_ONCE = 24;
 const TRACKER_MAX_COUNT = 200;
 
 const MINIMAL_TIME_INTERVAL = 40;
@@ -85,7 +85,7 @@ export default class WaveSystem implements ISystem {
             },
             endPoint: {
               x: GameContext.VIEW_WIDTH,
-              y: 0,
+              y: 6,
             },
             timeInterval: Math.max(
               MINIMAL_TIME_INTERVAL,
@@ -96,7 +96,7 @@ export default class WaveSystem implements ISystem {
             ? {
                 velocity: {
                   x: 0,
-                  y: Math.min((10 * this._waveStage) / 10, 3),
+                  y: Math.min((10 * this._waveStage) / 10, 2.4),
                 },
               }
             : undefined
@@ -122,7 +122,7 @@ export default class WaveSystem implements ISystem {
             ? {
                 velocity: {
                   x: 0,
-                  y: -Math.min((10 * this._waveStage) / 10, 3),
+                  y: -Math.min((10 * this._waveStage) / 10, 2.4),
                 },
               }
             : undefined
@@ -193,14 +193,8 @@ export default class WaveSystem implements ISystem {
           isMutant
             ? {
                 velocity: {
-                  x:
-                    (VelocityStore.x[avoider] /
-                      Math.abs(VelocityStore.x[avoider])) *
-                    rangedRandomNumber(0.4, 2),
-                  y:
-                    (VelocityStore.y[avoider] /
-                      Math.abs(VelocityStore.y[avoider])) *
-                    rangedRandomNumber(0.4, 2),
+                  x: rangedRandomNumber(0.4, 2),
+                  y: rangedRandomNumber(0.4, 1),
                 },
               }
             : undefined
