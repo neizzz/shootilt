@@ -130,12 +130,13 @@ export default class BulletStateSystem implements ISystem {
 
     this._queryExitedBullets(world).forEach((bullet) => {
       this._spriteByBullet.remove(bullet as Entity);
-      /** FIXME:
-       * 총알이 밖으로 나가면서 사라질때 undefined참조 에러.
-       * 임시로 optional chaining 추가
-       */
-      this._trailByBullet[bullet]?.destroy();
-      delete this._trailByBullet[bullet];
+      /** FIXME: 20230316 이상없으면 try-catch 지우기 */
+      try {
+        this._trailByBullet[bullet].destroy();
+        delete this._trailByBullet[bullet];
+      } catch (e) {
+        debugger;
+      }
     });
 
     this._queryBullets(world).forEach((bullet) => {
@@ -147,11 +148,12 @@ export default class BulletStateSystem implements ISystem {
       bodySprite.y = y;
 
       if (BulletTag.state[bullet] !== BulletState.Loading) {
-        /** FIXME:
-         * 총알이 밖으로 나가면서 사라질때 undefined참조 에러.
-         * 임시로 optional chaining 추가
-         */
-        this._trailByBullet[bullet]?.update();
+        /** FIXME: 20230316 이상없으면 try-catch 지우기 */
+        try {
+          this._trailByBullet[bullet].update();
+        } catch (e) {
+          debugger;
+        }
       }
     });
   }
