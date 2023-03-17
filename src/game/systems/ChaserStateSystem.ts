@@ -130,6 +130,7 @@ export default class ChaserStateSystem implements ISystem {
       const shadowSprite = this._shadowSpriteByEntity.get(
         chaser as Entity
       ) as Sprite;
+      shadowSprite.scale = { x: 1.4, y: 1.4 };
       shadowSprite.x = x;
       shadowSprite.y = y;
     });
@@ -177,7 +178,7 @@ export default class ChaserStateSystem implements ISystem {
       [TextureKind.ChaserShadow]: (() => {
         const graphics = new Graphics()
           .beginFill(0xfcffe7)
-          .drawCircle(0, 0, ObjectSize.ChaserRadius + 2)
+          .drawCircle(0, 0, ObjectSize.ChaserRadius)
           .endFill();
         graphics.cacheAsBitmap = true;
         return generateTexture(graphics);

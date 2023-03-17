@@ -84,6 +84,7 @@ export default class AvoiderStateSystem implements ISystem {
           const shadowSprite = createSprite(
             this._textureByKind[TextureKind.AvoiderShadow] as Texture
           );
+          shadowSprite.scale = { x: 1.3, y: 1.3 };
           this._shadowSpriteByEntity.add(avoider as Entity, shadowSprite);
           this._backStage.addChild(shadowSprite);
           break;
@@ -129,7 +130,8 @@ export default class AvoiderStateSystem implements ISystem {
       [TextureKind.AvoiderShadow]: (() => {
         const graphics = new Graphics()
           .beginFill(0xfcffe7)
-          .drawCircle(0, 0, ObjectSize.AvoiderRadius + 2)
+          // .drawCircle(0, 0, ObjectSize.AvoiderRadius + 2)
+          .drawCircle(0, 0, ObjectSize.AvoiderRadius)
           .endFill();
         graphics.cacheAsBitmap = true;
         return generateTexture(graphics);

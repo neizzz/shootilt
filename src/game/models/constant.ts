@@ -1,8 +1,8 @@
 /** Config */
 export const ObjectSize = {
-  AvoiderRadius: 6,
-  BulletRadius: 6 /** NOTE: avoider 크기만큼 */,
-  ChaserRadius: 6,
+  AvoiderRadius: 8,
+  BulletRadius: 8 /** NOTE: avoider 크기만큼 */,
+  ChaserRadius: 8,
 };
 
 /** Enum(Kind) */

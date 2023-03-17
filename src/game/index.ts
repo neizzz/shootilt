@@ -113,7 +113,7 @@ export default class Game {
     /** update */
     this._systems = [
       new DebugDashboardSystem(this._gameApp),
-      // new WaveSystem(this.getStartTime()),
+      new WaveSystem(this.getStartTime()),
       new ChaseSystem(),
       new MoveSystem(),
       new CollideSystem(),
