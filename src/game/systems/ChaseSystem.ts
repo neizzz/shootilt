@@ -1,5 +1,7 @@
 import * as Ecs from 'bitecs';
 
+import { GameContext } from '@game';
+
 import '@game/models/ecs';
 import {
   ChaseStore,
@@ -8,15 +10,12 @@ import {
   VelocityStore,
 } from '@game/models/ecs';
 
-const CHASING_SPEED = 2;
-const EPSILON = 0.1;
-
 export default class ChaseSystem implements ISystem {
   private _queryChasers = Ecs.defineQuery([ChaseStore]);
 
   update(world: Ecs.IWorld, delta: number) {
-    const chasingSpeed = CHASING_SPEED;
-    const epsilon = EPSILON;
+    const chasingSpeed = GameContext.CURRENT_CHASE_SPEED;
+    const epsilon = 0.1;
 
     this._queryChasers(world).forEach((chaser) => {
       const target = ChaseStore.target[chaser];

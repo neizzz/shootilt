@@ -68,6 +68,10 @@ export default class ShootingSystem implements ISystem {
         world,
         player as Entity
       );
+
+      if (typeof EquippedBulletReference.bullet[player] !== 'number') {
+        debugger;
+      }
     }
   }
 }

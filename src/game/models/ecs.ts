@@ -32,7 +32,7 @@ export type ComponentTypes = {
   [ComponentKind.FutureVelocity]?: VelocityType;
   [ComponentKind.Chase]?: ChaseType;
   [ComponentKind.Collide]?: CollideType;
-  [ComponentKind.Rotate]?: RotateType;
+  // [ComponentKind.Rotate]?: RotateType;
 };
 
 export const PlayerTag = Ecs.defineComponent();
@@ -98,9 +98,13 @@ export type OutsideStageBehaviorType = {
   behavior: OutsideStageBehavior;
 };
 
-export const ChaseStore = Ecs.defineComponent({ target: Ecs.Types.eid });
+export const ChaseStore = Ecs.defineComponent({
+  target: Ecs.Types.eid,
+  speed: Ecs.Types.ui8,
+});
 export type ChaseType = {
   target: Entity;
+  speed: number;
 };
 
 export const CollideStore = Ecs.defineComponent({
@@ -114,12 +118,12 @@ export type CollideType = {
   hitRadius: number;
 };
 
-export const RotateStore = Ecs.defineComponent({
-  angle: Ecs.Types.ui8 /** clockwise radian from y axis */,
-});
-export type RotateType = {
-  angle: number;
-};
+// export const RotateStore = Ecs.defineComponent({
+//   angle: Ecs.Types.ui8 /** clockwise radian from y axis */,
+// });
+// export type RotateType = {
+//   angle: number;
+// };
 
 /**
  * System

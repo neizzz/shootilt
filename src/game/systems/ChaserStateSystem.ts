@@ -100,6 +100,7 @@ export default class ChaserStateSystem implements ISystem {
         case ChaserState.Chasing:
           Ecs.addComponent(world, ChaseStore, chaser);
           Ecs.addComponent(world, VelocityStore, chaser);
+          /** TODO: battle play */
           ChaseStore.target[chaser] = this._queryPlayer(world)[0];
           VelocityStore.x[chaser] = 0;
           VelocityStore.y[chaser] = 0;

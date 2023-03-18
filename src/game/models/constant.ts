@@ -5,6 +5,10 @@ export const ObjectSize = {
   ChaserRadius: 8,
 };
 
+// export const MAX_ENTITY_COUNT = 1024;
+export const MIN_CHASER_SPEED = 1.5;
+export const MAX_CHASER_SPEED = 2.5;
+
 /** Enum(Kind) */
 export enum EntityKind {
   NULL,

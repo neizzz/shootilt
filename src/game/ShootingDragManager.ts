@@ -121,7 +121,7 @@ export default class ShootingDragManager {
 
     const d = this._sightLineGraphics!.pivot.y;
     const theta = this._sightLineGraphics!.rotation;
-    const speed = 1 + ((MAX_BULLET_SPEED - 1) * d) / MAX_SIGHT_LINE_LENGTH;
+    const speed = 2 + ((MAX_BULLET_SPEED - 2) * d) / MAX_SIGHT_LINE_LENGTH;
 
     this._shoot({
       x: speed * Math.sin(theta),
