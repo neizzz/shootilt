@@ -1,13 +1,20 @@
+import { Container, Graphics, Sprite } from 'pixi.js';
+
 import * as Ecs from 'bitecs';
 
 import {
-  AvoiderTag,
   EquippedBulletReference,
   ISystem,
   PlayerTag,
   VelocityStore,
   VelocityType,
 } from '@game/models/ecs';
+
+import { generateTexture } from '@game/utils/in-game';
+
+import { PositionStore } from './../models/ecs';
+
+const EPSILON = 0.001;
 
 export default class VelocityInputSystem implements ISystem {
   private _boundDeviceOrientationListener =
@@ -16,12 +23,29 @@ export default class VelocityInputSystem implements ISystem {
   private _queryPlayer = Ecs.defineQuery([PlayerTag]);
 
   private _latestOrientation?: VelocityType;
+  private _directionArrowSprite: Sprite;
 
-  constructor() {
+  constructor(frontStage: Container) {
     window.addEventListener(
       'deviceorientation',
       this._boundDeviceOrientationListener
     );
+
+    this._directionArrowSprite = new Sprite(
+      (() => {
+        const graphics = new Graphics()
+          .beginFill(0x6eccaf)
+          .moveTo(0, 0)
+          .lineTo(3, -8)
+          .lineTo(6, 0)
+          .endFill();
+        graphics.cacheAsBitmap = true;
+        return generateTexture(graphics);
+      })()
+    );
+    /** NOTE: avoider 크기에 따라 y-anchor를 변경시켜줘야 함. */
+    this._directionArrowSprite.anchor.set(0.5, 2.8);
+    frontStage.addChild(this._directionArrowSprite);
   }
 
   destroy() {
@@ -32,16 +56,39 @@ export default class VelocityInputSystem implements ISystem {
   }
 
   update(world: Ecs.IWorld) {
+    const player = this._queryPlayer(world)[0];
+
+    /** REFACTOR: 따로 direction arrow만을 위한 system이 있어도 될 듯. */
+    this._directionArrowSprite.x = PositionStore.x[player];
+    this._directionArrowSprite.y = PositionStore.y[player];
+
     if (!this._latestOrientation) return;
 
-    const player = this._queryPlayer(world)[0];
-    VelocityStore.x[player] = this._latestOrientation.x;
-    VelocityStore.y[player] = this._latestOrientation.y;
-
+    const { x, y } = this._latestOrientation;
     const playerBullet = EquippedBulletReference.bullet[player];
-    VelocityStore.x[playerBullet] = this._latestOrientation.x;
-    VelocityStore.y[playerBullet] = this._latestOrientation.y;
+    const epsilon = EPSILON;
 
+    VelocityStore.x[player] = x;
+    VelocityStore.y[player] = y;
+
+    VelocityStore.x[playerBullet] = x;
+    VelocityStore.y[playerBullet] = y;
+
+    let resultRotation = 0;
+
+    if (Math.abs(y) < epsilon) {
+      x >= 0 ? (resultRotation = Math.PI / 2) : (resultRotation = -Math.PI / 2);
+    } else if (y > 0) {
+      Math.abs(x) < epsilon
+        ? (resultRotation = Math.PI)
+        : (resultRotation = Math.PI - Math.atan(x / y));
+    } else if (y < 0) {
+      Math.abs(x) < epsilon
+        ? (resultRotation = 0)
+        : (resultRotation = -Math.atan(x / y));
+    }
+
+    this._directionArrowSprite.rotation = resultRotation;
     this._latestOrientation = undefined;
   }
 
