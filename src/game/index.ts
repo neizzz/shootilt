@@ -41,8 +41,9 @@ export default class Game {
   private _world!: Ecs.IWorld;
 
   private _gameApp: Application;
-  private _stage: Container;
+  private _mainStage: Container;
   private _backStage: Container;
+  private _frontStage: Container;
   private _particleContainer: ParticleContainer;
   private _systems: ISystem[] = [];
   private _nonUpdateSystems: ISystem[] = [];
@@ -69,13 +70,15 @@ export default class Game {
 
     this._backStage = new Container();
     this._particleContainer = new ParticleContainer();
-    this._stage = new Container();
-    this._stage.interactive = true;
-    this._stage.hitArea = this._gameApp.screen;
+    this._mainStage = new Container();
+    this._frontStage = new Container();
+    this._mainStage.interactive = true;
+    this._mainStage.hitArea = this._gameApp.screen;
     this._gameApp.stage.addChild(
       this._backStage,
       this._particleContainer,
-      this._stage
+      this._mainStage,
+      this._frontStage
     );
 
     /** NOTE: (#35)
@@ -113,19 +116,19 @@ export default class Game {
     /** update */
     this._systems = [
       new DebugDashboardSystem(this._gameApp),
-      new WaveSystem(this.getStartTime()),
+      // new WaveSystem(this.getStartTime()),
       new ChaseSystem(),
       new MoveSystem(),
       new CollideSystem(),
-      new ScoreSystem(this.getStage()),
-      new ChaserStateSystem(this.getStage(), this.getBackStage()),
-      new AvoiderStateSystem(this.getStage(), this.getBackStage()),
-      new BulletStateSystem(this.getStage(), this.getParticleContainer()),
+      new ScoreSystem(this.getMainStage()),
+      new ChaserStateSystem(this.getMainStage(), this.getBackStage()),
+      new AvoiderStateSystem(this.getMainStage(), this.getBackStage()),
+      new BulletStateSystem(this.getMainStage(), this.getParticleContainer()),
       /** NOTE: BulletStateSystem보다 뒤에 와야함 */
-      new ShootingSystem(this.getStage()),
+      new ShootingSystem(this.getMainStage()),
       new SinglePlaySystem(this),
-      new ScoreSystem(this.getStage()),
-      new VelocityInputSystem(),
+      new ScoreSystem(this.getMainStage()),
+      new VelocityInputSystem(this.getFrontStage()),
     ];
 
     this._nonUpdateSystems = [new DebugVelocityInputSystem(this._world)];
@@ -145,8 +148,9 @@ export default class Game {
 
   destroy() {
     console.debug('Game instance destroyed.');
-    this._stage.removeChildren();
+    this._mainStage.removeChildren();
     this._backStage.removeChildren();
+    this._frontStage.removeChildren();
     this._particleContainer.removeChildren();
     this._systems.forEach((system) => system.destroy?.(this._world));
     this._systems = [];
@@ -159,12 +163,16 @@ export default class Game {
     return this._timeInfo.start;
   }
 
-  getStage(): Container {
-    return this._stage;
+  getMainStage(): Container {
+    return this._mainStage;
   }
 
   getBackStage(): Container {
     return this._backStage;
+  }
+
+  getFrontStage(): Container {
+    return this._frontStage;
   }
 
   getParticleContainer(): ParticleContainer {

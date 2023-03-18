@@ -30,7 +30,7 @@ import { EquippedBulletReference } from './../models/ecs';
 type AvoiderTextureKind = TextureKind.AvoiderBody | TextureKind.AvoiderShadow;
 
 export default class AvoiderStateSystem implements ISystem {
-  private _stage: Container;
+  private _mainStage: Container;
   private _backStage: Container;
 
   private _textureByKind!: Record<AvoiderTextureKind, Texture | Texture[]>;
@@ -42,8 +42,8 @@ export default class AvoiderStateSystem implements ISystem {
   private _queryEnteredAvoiders = Ecs.enterQuery(this._queryAvoiders);
   private _queryExitedAvoiders = Ecs.exitQuery(this._queryAvoiders);
 
-  constructor(stage: Container, backStage: Container) {
-    this._stage = stage;
+  constructor(mainStage: Container, backStage: Container) {
+    this._mainStage = mainStage;
     this._backStage = backStage;
     this._initTextures();
   }
@@ -58,7 +58,7 @@ export default class AvoiderStateSystem implements ISystem {
         this._textureByKind[TextureKind.AvoiderBody] as Texture
       );
       this._spriteByEntity.add(avoider as Entity, bodySprite);
-      this._stage.addChild(bodySprite);
+      this._mainStage.addChild(bodySprite);
     });
 
     this._queryChangedAvoiders(world).forEach((avoider) => {
@@ -85,8 +85,9 @@ export default class AvoiderStateSystem implements ISystem {
             this._textureByKind[TextureKind.AvoiderShadow] as Texture
           );
           shadowSprite.scale = { x: 1.3, y: 1.3 };
-          this._shadowSpriteByEntity.add(avoider as Entity, shadowSprite);
           this._backStage.addChild(shadowSprite);
+
+          this._shadowSpriteByEntity.add(avoider as Entity, shadowSprite);
           break;
 
         case AvoiderState.Dead:
