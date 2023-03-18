@@ -1,8 +1,15 @@
 import { AnimatedSprite, Graphics, Sprite, Texture } from 'pixi.js';
 
+import { MAX_CHASER_SPEED, MIN_CHASER_SPEED } from '@game/models/constant';
 import { PositionType } from '@game/models/ecs';
 
 import { GameContext } from '..';
+import { quadrant, rangedRandomInteger, rangedRandomNumber } from './math';
+
+/** NOTE:
+ * these functions must be called after game start.
+ * (e.g. after GameContext initialized.)
+ */
 
 export const generateTexture = (graphics: Graphics) => {
   if (!GameContext.renderer) {
@@ -19,6 +26,14 @@ export const randomPosition = (
   y: Math.floor(Math.random() * maxHeight),
 });
 
+export const centerPosition = (): PositionType => {
+  return {
+    x: GameContext.VIEW_WIDTH / 2,
+    y: GameContext.VIEW_HEIGHT / 2,
+  };
+};
+
+/** FIXME: 없어도 될듯 */
 export const createSprite = (texture: Texture) => {
   const sprite = new Sprite(texture);
   sprite.anchor.set(0.5);
@@ -54,7 +69,11 @@ export const clampIntoStage = (x: number, y: number): PositionType => {
   return { x, y };
 };
 
-/** 사분면 기준으로 반대 사분면의 좌표를 반환 */
+export const clampChaserSpeed = (speed: number) => {
+  return Math.min(Math.max(MIN_CHASER_SPEED, speed), MAX_CHASER_SPEED);
+};
+
+/** 'base' 사분면이 아닌 사분면 쪽(랜덤)으로 'locationDelta'만큼 떨어진 좌표 */
 export const oppositePositionFrom = (
   base: PositionType,
   locationDelta: PositionType
@@ -64,9 +83,20 @@ export const oppositePositionFrom = (
     throw new Error('invalid arguments.');
   }
 
+  const center = centerPosition();
+  const baseQuadrant = quadrant({ x: base.x - center.x, y: base.y - center.y });
+  const candidateProductSigns = [
+    [1, 1],
+    [-1, 1],
+    [-1, -1],
+    [1, 1],
+  ];
+  candidateProductSigns.splice(baseQuadrant, 1);
+  const pickedProductSigns = candidateProductSigns[rangedRandomInteger(0, 2)];
+
   return {
-    x: base.x + (base.x > 0 ? -1 : 1) * locationDelta.x,
-    y: base.y + (base.y > 0 ? -1 : 1) * locationDelta.y,
+    x: base.x + pickedProductSigns[0] * locationDelta.x,
+    y: base.y + pickedProductSigns[1] * locationDelta.y,
   };
 };
 

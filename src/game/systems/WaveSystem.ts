@@ -8,25 +8,29 @@ import {
   ISystem,
   PositionStore,
   PositionType,
-  VelocityStore,
 } from '@game/models/ecs';
+import { AvoiderTag } from '@game/models/ecs';
 
 import { createChaser } from '@game/utils/create-entity';
-import { oppositePositionFrom, randomPosition } from '@game/utils/in-game';
 import {
-  randomFlag,
-  randomSignFlag,
-  rangedRandomNumber,
-} from '@game/utils/math';
+  createCircleWave,
+  createStraightWave,
+  createStraightWave2,
+} from '@game/utils/create-wave';
+import {
+  centerPosition,
+  oppositePositionFrom,
+  randomPosition,
+} from '@game/utils/in-game';
+import { randomFlag, rangedRandomNumber } from '@game/utils/math';
 import { now } from '@game/utils/time';
-
-import { AvoiderTag, VelocityType } from './../models/ecs';
 
 // TODO: FIXME: 이건 추후에, DifficultySystem으로 수정가능하게
 const WAVE_INTERVAL = 5000;
 const WAVE_AMOUNT_UNIT = 3;
 const WAVE_MAX_AMOUNT_AT_ONCE = 24;
-const TRACKER_MAX_COUNT = 200;
+const CHASER_MAX_COUNT = 200;
+const TOTAL_WAVE_KIND = 10;
 
 const MINIMAL_TIME_INTERVAL = 40;
 
@@ -37,48 +41,48 @@ export default class WaveSystem implements ISystem {
   private _queryChaser = Ecs.defineQuery([ChaseStore]);
   private _queryAvoider = Ecs.defineQuery([AvoiderTag]);
 
-  private _intervalHandlers = new Set<ReturnType<typeof setInterval>>();
+  // private _intervalHandlers = new Set<ReturnType<typeof setInterval>>();
 
   constructor(startTime: number) {
     this._nextWaveTime = startTime + WAVE_INTERVAL;
     this._waveStage = 1;
   }
 
-  destroy() {
-    this._intervalHandlers.forEach((handler) => {
-      clearInterval(handler);
-    });
-  }
+  // destroy() {
+  //   this._intervalHandlers.forEach((handler) => {
+  //     clearInterval(handler);
+  //   });
+  // }
 
   update(world: Ecs.IWorld) {
     if (this._nextWaveTime > now()) return;
 
     const chasers = this._queryChaser(world);
 
-    if (chasers.length > TRACKER_MAX_COUNT) return;
+    if (chasers.length > CHASER_MAX_COUNT) return;
 
     const currentAmount = Math.min(
       this._waveStage * WAVE_AMOUNT_UNIT,
       WAVE_MAX_AMOUNT_AT_ONCE
     );
-    /** DEBUG: */
-    // const currentAmount = 1;
 
     /** random creation */
-    for (let i = 0; i < currentAmount; i++) {
-      createChaser(world, {
-        [ComponentKind.Position]: randomPosition() as PositionType,
-      });
-    }
+    // for (let i = 0; i < currentAmount; i++) {
+    //   createChaser(world, {
+    //     [ComponentKind.Position]: randomPosition() as PositionType,
+    //   });
+    // }
 
-    const isMutant = randomFlag();
-
-    switch (this._waveStage % 10) {
+    switch (this._waveStage % TOTAL_WAVE_KIND) {
       case 1:
-        this._createStraightWave(
+      case 6:
+        // const amount = 10 + Math.min(this._waveStage, 20);
+        const amount = 10;
+        const mutantSpeed = GameContext.CURRENT_CHASE_SPEED;
+        createStraightWave(
           world,
           {
-            amount: 10 + Math.min(this._waveStage, 30),
+            amount,
             startPoint: {
               x: 0,
               y: 6,
@@ -87,259 +91,74 @@ export default class WaveSystem implements ISystem {
               x: GameContext.VIEW_WIDTH,
               y: 6,
             },
-            timeInterval: Math.max(
-              MINIMAL_TIME_INTERVAL,
-              200 / this._waveStage
-            ),
+            timeInterval: 0,
           },
-          isMutant
-            ? {
-                velocity: {
-                  x: 0,
-                  y: Math.min((10 * this._waveStage) / 10, 2.4),
-                },
-              }
-            : undefined
+          { directionAngle: Math.PI, speed: mutantSpeed }
         );
-        this._createStraightWave(
+        createStraightWave(
           world,
           {
-            amount: 10 + Math.min(this._waveStage, 30),
+            amount,
             startPoint: {
-              x: 0,
-              y: GameContext.VIEW_HEIGHT - 6,
-            },
-            endPoint: {
               x: GameContext.VIEW_WIDTH,
               y: GameContext.VIEW_HEIGHT - 6,
             },
-            timeInterval: Math.max(
-              MINIMAL_TIME_INTERVAL,
-              200 / this._waveStage
-            ),
+            endPoint: {
+              x: 0,
+              y: GameContext.VIEW_HEIGHT - 6,
+            },
+            timeInterval: 0,
           },
-          isMutant
-            ? {
-                velocity: {
-                  x: 0,
-                  y: -Math.min((10 * this._waveStage) / 10, 2.4),
-                },
-              }
-            : undefined
+          { directionAngle: 0, speed: mutantSpeed }
         );
         break;
 
-      case 3:
+      case 2:
+      case 3: {
         const startPoint = randomPosition();
-        this._createStraightWave(
-          world,
-          {
-            amount: 10,
-            startPoint,
-            endPoint: oppositePositionFrom(startPoint, {
-              x: rangedRandomNumber(100, 200),
-              y: rangedRandomNumber(100, 200),
-            }),
-            timeInterval: 100,
-          },
-          isMutant
-            ? {
-                velocity: {
-                  x: randomSignFlag() * rangedRandomNumber(0.4, 2),
-                  y: randomSignFlag() * rangedRandomNumber(0.4, 2),
-                },
-              }
-            : undefined
-        );
+        createStraightWave(world, {
+          amount: 10 + Math.min(20, Math.floor(this._waveStage / 3)),
+          startPoint,
+          endPoint: oppositePositionFrom(startPoint, {
+            x: rangedRandomNumber(150, 400),
+            y: rangedRandomNumber(150, 250),
+          }),
+          timeInterval: 100,
+        });
         break;
+      }
 
       case 4:
-        this._createStraightWave2(
-          world,
-          {
-            amount: 10,
-            startPoint: randomPosition(),
-            locationInterval: {
-              x: randomSignFlag() * rangedRandomNumber(2, 5),
-              y: randomSignFlag() * rangedRandomNumber(2, 5),
-            },
+      case 5:
+        [0, Math.PI / 2, Math.PI, Math.PI + Math.PI / 2].forEach((angle) => {
+          createStraightWave2(world, {
+            amount: 10 + Math.min(20, Math.floor(this._waveStage / 3)),
+            startPoint: centerPosition(),
+            angle,
+            locationInterval: 8,
             timeInterval: 100,
-          },
-          isMutant
-            ? {
-                velocity: {
-                  x: randomSignFlag() * rangedRandomNumber(0.4, 2),
-                  y: randomSignFlag() * rangedRandomNumber(0.4, 2),
-                },
-              }
-            : undefined
-        );
+          });
+        });
         break;
 
-      case 5:
+      case 7:
+      case 8:
         /** TODO: battle play */
         const avoider = this._queryAvoider(world)[0];
-        this._createCircleWave(
-          world,
-          {
-            amount: 15,
-            centerPoint: {
-              x: PositionStore.x[avoider],
-              y: PositionStore.y[avoider],
-            },
-            radius: Math.max(40, 200 - 5 * this._waveStage),
-            timeInterval: 100,
+        createCircleWave(world, {
+          amount: 30 + Math.min(Math.floor(this._waveStage / 5), 20),
+          centerPoint: {
+            x: PositionStore.x[avoider],
+            y: PositionStore.y[avoider],
           },
-          isMutant
-            ? {
-                velocity: {
-                  x: rangedRandomNumber(0.4, 2),
-                  y: rangedRandomNumber(0.4, 1),
-                },
-              }
-            : undefined
-        );
+          radius: Math.max(40, 200 - 5 * this._waveStage),
+          timeInterval: 0,
+        });
+        break;
     }
 
     this._waveStage++;
     this._nextWaveTime = this._nextWaveTime + WAVE_INTERVAL;
   }
-
-  private _createStraightWave(
-    world: Ecs.IWorld,
-    params: {
-      amount: number;
-      startPoint: PositionType;
-      endPoint: PositionType;
-      timeInterval: number;
-    },
-    mutantOptions?: {
-      velocity: VelocityType;
-    }
-  ) {
-    const { amount, startPoint, endPoint, timeInterval } = params;
-    const isMutant = !!mutantOptions;
-
-    const [xInterval, yInterval] = [
-      Math.abs(startPoint.x - endPoint.x) / amount,
-      Math.abs(startPoint.y - endPoint.y) / amount,
-    ];
-
-    this._setWaveInterval(
-      (currentGenCount) => {
-        createChaser(
-          world,
-          {
-            [ComponentKind.Position]: {
-              x: startPoint.x + currentGenCount * xInterval,
-              y: startPoint.y + currentGenCount * yInterval,
-            },
-            [ComponentKind.FutureVelocity]: mutantOptions?.velocity,
-          },
-          isMutant
-        );
-      },
-      amount,
-      timeInterval
-    );
-  }
-
-  private _createStraightWave2(
-    world: Ecs.IWorld,
-    params: {
-      amount: number;
-      startPoint: PositionType;
-      locationInterval: PositionType;
-      timeInterval: number;
-    },
-    mutantOptions?: {
-      velocity: VelocityType;
-    }
-  ) {
-    const { amount, startPoint, locationInterval, timeInterval } = params;
-    const isMutant = !!mutantOptions;
-
-    this._setWaveInterval(
-      (currentGenCount) => {
-        createChaser(
-          world,
-          {
-            [ComponentKind.Position]: {
-              x: startPoint.x + currentGenCount * locationInterval.x,
-              y: startPoint.y + currentGenCount * locationInterval.y,
-            },
-            [ComponentKind.FutureVelocity]: mutantOptions?.velocity,
-          },
-          isMutant
-        );
-      },
-      amount,
-      timeInterval
-    );
-  }
-
-  private _createCircleWave(
-    world: Ecs.IWorld,
-    params: {
-      amount: number;
-      centerPoint: PositionType;
-      radius: number;
-      timeInterval: number;
-    },
-    mutantOptions?: {
-      velocity: VelocityType;
-    }
-  ) {
-    const { amount, centerPoint, radius, timeInterval } = params;
-    const isMutant = !!mutantOptions;
-
-    const thetaInterval = (2 * Math.PI) / amount;
-
-    this._setWaveInterval(
-      (currentGenCount) => {
-        createChaser(
-          world,
-          {
-            [ComponentKind.Position]: {
-              x:
-                centerPoint.x +
-                radius * Math.cos(currentGenCount * thetaInterval),
-              y:
-                centerPoint.y +
-                radius * Math.sin(currentGenCount * thetaInterval),
-            },
-            [ComponentKind.FutureVelocity]: mutantOptions?.velocity,
-          },
-          isMutant
-        );
-      },
-      amount,
-      timeInterval
-    );
-  }
-
-  private _setWaveInterval(
-    cb: (currentGenCount: number) => void,
-    amount: number,
-    timeInterval: number
-  ) {
-    cb(0);
-
-    let completedGenCount = 1;
-
-    const handler = setInterval(() => {
-      if (completedGenCount === amount) {
-        clearInterval(handler);
-        this._intervalHandlers.delete(handler);
-      }
-
-      cb(completedGenCount);
-      completedGenCount++;
-    }, timeInterval);
-
-    this._intervalHandlers.add(handler);
-  }
-
-  private _getVelocityToAvoider(avoiderVelocity: VelocityType) {}
 }
 

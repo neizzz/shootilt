@@ -23,13 +23,8 @@ import ChaserStateSystem from './systems/ChaserStateSystem';
 import SinglePlaySystem from './systems/SinglePlaySystem';
 import { createAvoider } from './utils/create-entity';
 
-window.GameContext = {
-  VIEW_WIDTH: window.innerWidth,
-  VIEW_HEIGHT: window.innerHeight,
-  MAX_ENTITY_COUNT: 1024,
-  renderer: undefined,
-};
-
+// @ts-ignore
+window.GameContext = {};
 export const GameContext = window.GameContext;
 
 type GameInitOptions = {
@@ -55,6 +50,8 @@ export default class Game {
 
   constructor({ onEndRound }: GameInitOptions) {
     console.debug('Game instance initialized.');
+    GameContext.VIEW_WIDTH = window.innerWidth;
+    GameContext.VIEW_HEIGHT = window.innerHeight;
 
     this._onEndRound = onEndRound;
     this._gameApp = new Application({
@@ -67,6 +64,7 @@ export default class Game {
       antialias: false,
       autoStart: false,
     });
+    GameContext.renderer = this._gameApp.renderer as Renderer;
 
     this._backStage = new Container();
     this._particleContainer = new ParticleContainer();
@@ -88,8 +86,6 @@ export default class Game {
     this._gameApp.ticker.minFPS = 30;
     this._gameApp.ticker.maxFPS = 60;
 
-    GameContext.renderer = this._gameApp.renderer as Renderer;
-
     this._gameApp.ticker
       .add((delta) => {
         this._systems.forEach((system) => system.update(this._world, delta));
@@ -102,6 +98,8 @@ export default class Game {
   }
 
   startRound() {
+    GameContext.CURRENT_CHASE_SPEED = 1.5;
+
     this._world = Ecs.createWorld();
     this._timeInfo = Object.freeze({ start: now() });
 
@@ -116,7 +114,7 @@ export default class Game {
     /** update */
     this._systems = [
       new DebugDashboardSystem(this._gameApp),
-      // new WaveSystem(this.getStartTime()),
+      new WaveSystem(this.getStartTime()),
       new ChaseSystem(),
       new MoveSystem(),
       new CollideSystem(),
